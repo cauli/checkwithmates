@@ -77,9 +77,15 @@ winston.exitOnError = false;
  */
 var io = require('socket.io').listen(server, {log: false});
 
-io.configure(function () { 
+
+/*io.configure(function () { 
   io.set("transports", ["xhr-polling"]); 
   io.set("polling duration", 10); 
+});*/
+
+global.io.configure(function () {
+  global.io.set("transports", ["xhr-polling"]);
+  global.io.set("polling duration", 10);
 });
 
 /*if (process.env.OPENSHIFT_NODEJS_IP) {
