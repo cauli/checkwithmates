@@ -1,6 +1,7 @@
 $(function() {
 
   var from, to, promotion, rcvd;
+  var countHiddenMoves = 0;
   var $side  = 'w';
   var $piece = null;
   var $chess = new Chess();
@@ -60,12 +61,16 @@ $(function() {
     return el ? el.hasClass('selected') : false;
   }
 
+
   function movePiece(from, to, promotion, rcvd) {
     var move = $chess.move({
       'from': from,
       'to': to,
       promotion: promotion
     });
+
+    console.log("MOVE with promo:" + promotion);
+    console.dir(move);
 
     if (move && !$gameOver) {
       var tdFrom = $('td.' + from.toUpperCase());
@@ -299,6 +304,22 @@ $(function() {
       $('.chess_board.white').remove();
       $('.chess_board.black').show();
     }
+    console.log("les moves");
+    console.dir(data.moves);
+
+    if(data.moves.length != 0)
+    {
+      alert('Game is not empty!!!');
+      console.dir(data.moves);
+
+      // Recreate all the game.
+      for(var i=0; i<data.moves.length; i++)
+      {
+        // TODO Fix this. movePiece deve ser duplicado e então enviar apenas o objeto move
+        movePiece($chess.get_move_obj(data.moves[i].san), true);
+      }
+
+    }
 
     $('#clock li.white').addClass('ticking');
     $('#sendMessage').find('input').addClass($side === 'b' ? 'black' : 'white');
@@ -310,19 +331,26 @@ $(function() {
     if (typeof document.hidden === undefined) return;
     if (document.hidden) {
       var title = $('title').text();
-      $('title').text('* ' + title);
+      countHiddenMoves++;
 
-      $(window).on('focus', removeAsterisk);
+      $('title').text(title);
+      $('title').text('(' + countHiddenMoves + ') '+ title);
 
-      function removeAsterisk(e) {
+      $(window).on('focus', removeHiddenCount);
+
+      function removeHiddenCount(e) {
+        countHiddenMoves = 0;
         $('title').text(title);
-        $(window).off('focus', removeAsterisk);
+        $(window).off('focus', removeHiddenCount);
       }
     }
   });
 
   $socket.on('opponent-disconnected', function (data) {
-    $('.resign').off().remove();
+    console.log("One opponent disconnected");
+    // TO-DO One opponent disconnected
+
+    /* $('.resign').off().remove();
     
 
     $('#sendMessage').off();
@@ -338,7 +366,7 @@ $(function() {
 
     if (!$gameOver) {
       showModal("Your opponent has disconnected.");
-    }
+    }*/
   });
 
   $socket.on('player-resigned', function (data) {

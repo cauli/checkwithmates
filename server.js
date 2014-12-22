@@ -105,6 +105,9 @@ io.sockets.on('connection', function (socket) {
       'timeout': timeout
     };
 
+    games[token].moves = [];
+
+
     socket.emit('created', {
       'token': token
     });
@@ -121,7 +124,7 @@ io.sockets.on('connection', function (socket) {
     clearTimeout(games[data.token].timeout);
     game = games[data.token];
 
-    if (game.players.length >= 2) {
+    if (game.players.length >= 100) {
       socket.emit('full');
       return;
     } else if (game.players.length === 1) {
@@ -151,7 +154,8 @@ io.sockets.on('connection', function (socket) {
     game.creator.emit('ready', {});
 
     socket.emit('joined', {
-      'color': color
+      'color': color,
+      'moves': games[data.token].moves
     });
   });
 
@@ -169,16 +173,29 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  socket.on('get-moves', function (data) {
+    var player = getOpponent(data.token, socket);
+
+    if (data.token in games) {
+       if(player)
+       {
+          opponent.socket.emit('set-moves', {
+            'moves': games[data.token].moves
+          });
+       }
+    }
+  });
+
   socket.on('new-move', function (data) {
     var opponent;
 
     if (data.token in games) {
-      opponent = getOpponent(data.token, socket);
-      if (opponent) {
-        opponent.socket.emit('move', {
+      games[data.token].moves.push(data.move)
+
+      // TO-DO Create voting system here
+      socket.broadcast.emit('move', {
           'move': data.move
-        });
-      }
+      });
     }
   });
 
@@ -245,7 +262,6 @@ io.sockets.on('connection', function (socket) {
             opponent.socket.emit('opponent-disconnected');
           }
           clearInterval(games[token].interval);
-          delete games[token];
         }
       }
     }
@@ -255,7 +271,7 @@ io.sockets.on('connection', function (socket) {
     if (data.token in games) {
       var opponent = getOpponent(data.token, socket);
       if (opponent) {
-        opponent.socket.emit('receive-message', data);
+        socket.broadcast.emit('receive-message', data);
       }
     }
   });
