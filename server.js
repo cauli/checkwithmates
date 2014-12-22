@@ -75,7 +75,7 @@ winston.exitOnError = false;
 /**
  * Sockets
  */
-var io = require('socket.io').listen(server, {log: false});
+var io = require('socket.io').listen(process.env.PORT, {log: false});
 
 
 /*io.configure(function () { 
