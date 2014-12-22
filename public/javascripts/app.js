@@ -6,7 +6,7 @@ $(function () {
   var $WS;
 
   if (ENV === 'dev') {
-    $URL = 'https://simultaneouschess.herokuapp.com/';
+    $URL = 'https://simultaneouschess.herokuapp.com';
     $WS = $URL;
   } else if (ENV === 'openshift') {
     $URL = 'http://simultaneouschess.herokuapp.com/';
