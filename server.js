@@ -159,19 +159,19 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
-  socket.on('timer-white', function (data) {
-    runTimer('white', data.token, socket);
-  });
+  // socket.on('timer-white', function (data) {
+  //   runTimer('white', data.token, socket);
+  // });
 
-  socket.on('timer-black', function (data) {
-    runTimer('black', data.token, socket);
-  });
+  // socket.on('timer-black', function (data) {
+  //   runTimer('black', data.token, socket);
+  // });
 
-  socket.on('timer-clear-interval', function (data) {
-    if (data.token in games) {
-      clearInterval(games[data.token].interval);
-    }
-  });
+  // socket.on('timer-clear-interval', function (data) {
+  //   if (data.token in games) {
+  //     clearInterval(games[data.token].interval);
+  //   }
+  // });
 
   socket.on('get-moves', function (data) {
     var player = getOpponent(data.token, socket);
@@ -199,54 +199,54 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
-  socket.on('resign', function (data) {
-    if (data.token in games) {
-      clearInterval(games[data.token].interval);
-      io.sockets.in(data.token).emit('player-resigned', {
-        'color': data.color
-      });
-    }
-  });
+  // socket.on('resign', function (data) {
+  //   if (data.token in games) {
+  //     clearInterval(games[data.token].interval);
+  //     io.sockets.in(data.token).emit('player-resigned', {
+  //       'color': data.color
+  //     });
+  //   }
+  // });
 
-  socket.on('rematch-offer', function (data) {
-    var opponent;
+  // socket.on('rematch-offer', function (data) {
+  //   var opponent;
     
-    if (data.token in games) {
-      opponent = getOpponent(data.token, socket);
-      if (opponent) {
-        opponent.socket.emit('rematch-offered');
-      }
-    }
-  });
+  //   if (data.token in games) {
+  //     opponent = getOpponent(data.token, socket);
+  //     if (opponent) {
+  //       opponent.socket.emit('rematch-offered');
+  //     }
+  //   }
+  // });
 
-  socket.on('rematch-decline', function (data) {
-    var opponent;
+  // socket.on('rematch-decline', function (data) {
+  //   var opponent;
 
-    if (data.token in games) {
-      opponent = getOpponent(data.token, socket);
-      if (opponent) {
-        opponent.socket.emit('rematch-declined');
-      }
-    }
-  });
+  //   if (data.token in games) {
+  //     opponent = getOpponent(data.token, socket);
+  //     if (opponent) {
+  //       opponent.socket.emit('rematch-declined');
+  //     }
+  //   }
+  // });
 
-  socket.on('rematch-confirm', function (data) {
-    var opponent;
+  // socket.on('rematch-confirm', function (data) {
+  //   var opponent;
 
-    if (data.token in games) {
+  //   if (data.token in games) {
 
-      for(var j in games[data.token].players) {
-        games[data.token].players[j].time = data.time - data.increment + 1;
-        games[data.token].players[j].increment = data.increment;
-        games[data.token].players[j].color = games[data.token].players[j].color === 'black' ? 'white' : 'black';
-      }
+  //     for(var j in games[data.token].players) {
+  //       games[data.token].players[j].time = data.time - data.increment + 1;
+  //       games[data.token].players[j].increment = data.increment;
+  //       games[data.token].players[j].color = games[data.token].players[j].color === 'black' ? 'white' : 'black';
+  //     }
 
-      opponent = getOpponent(data.token, socket);
-      if (opponent) {
-        io.sockets.in(data.token).emit('rematch-confirmed');
-      }
-    }
-  })
+  //     opponent = getOpponent(data.token, socket);
+  //     if (opponent) {
+  //       io.sockets.in(data.token).emit('rematch-confirmed');
+  //     }
+  //   }
+  // })
 
   socket.on('disconnect', function (data) {
     var player, opponent, game;
@@ -277,38 +277,38 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-function runTimer(color, token, socket) {
-  var player, time_left, game = games[token];
+// function runTimer(color, token, socket) {
+//   var player, time_left, game = games[token];
 
-  if (!game) return;
+//   if (!game) return;
 
-  for (var i in game.players) {
-    player = game.players[i];
+//   for (var i in game.players) {
+//     player = game.players[i];
 
-    if (player.socket === socket && player.color === color) {
+//     if (player.socket === socket && player.color === color) {
 
-      clearInterval(games[token].interval);
-      games[token].players[i].time += games[token].players[i].increment;
+//       clearInterval(games[token].interval);
+//       games[token].players[i].time += games[token].players[i].increment;
 
-      return games[token].interval = setInterval(function() {
-        games[token].players[i].time -= 1;
-        time_left = games[token].players[i].time;
+//       return games[token].interval = setInterval(function() {
+//         games[token].players[i].time -= 1;
+//         time_left = games[token].players[i].time;
 
-        if (time_left >= 0) {
-          io.sockets.in(token).emit('countdown', {
-            'time': time_left,
-            'color': color
-          });
-        } else {
-          io.sockets.in(token).emit('countdown-gameover', {
-            'color': color
-          });
-          clearInterval(games[token].interval);
-        }
-      }, 1000);
-    }
-  }
-}
+//         if (time_left >= 0) {
+//           io.sockets.in(token).emit('countdown', {
+//             'time': time_left,
+//             'color': color
+//           });
+//         } else {
+//           io.sockets.in(token).emit('countdown-gameover', {
+//             'color': color
+//           });
+//           clearInterval(games[token].interval);
+//         }
+//       }, 1000);
+//     }
+//   }
+// }
 
 function getOpponent(token, socket) {
   var player, game = games[token];

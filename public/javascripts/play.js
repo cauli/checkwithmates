@@ -69,7 +69,6 @@ $(function() {
       promotion: promotion
     });
 
-    console.log("MOVE with promo:" + promotion);
     console.dir(move);
 
     if (move && !$gameOver) {
@@ -205,22 +204,22 @@ $(function() {
 
       if ($chess.game_over()) {
         $gameOver = true;
-        $socket.emit('timer-clear-interval', {
-          'token': $token
-        });
+        // $socket.emit('timer-clear-interval', {
+        //   'token': $token
+        // });
 
         $('.resign').hide();
         $('.rematch').show();
         showModal(result);
       } else {
         if ($chess.turn() === 'b') {
-          $socket.emit('timer-black', {
-            'token': $token
-          });
+          // $socket.emit('timer-black', {
+          //   'token': $token
+          // });
         } else {
-          $socket.emit('timer-white', {
-            'token': $token
-          });
+          // $socket.emit('timer-white', {
+          //   'token': $token
+          // });
         }
         $('#clock li').each(function() {
           $(this).toggleClass('ticking');
@@ -296,9 +295,9 @@ $(function() {
     if (data.color === 'white') {
       $side = 'w';
       $('.chess_board.black').remove();
-      $socket.emit('timer-white', {
-        'token': $token
-      });
+      // $socket.emit('timer-white', {
+      //   'token': $token
+      // });
     } else {
       $side = 'b';
       $('.chess_board.white').remove();
@@ -309,14 +308,18 @@ $(function() {
 
     if(data.moves.length != 0)
     {
-      alert('Game is not empty!!!');
       console.dir(data.moves);
 
       // Recreate all the game.
       for(var i=0; i<data.moves.length; i++)
       {
-        // TODO Fix this. movePiece deve ser duplicado e então enviar apenas o objeto move
-        movePiece($chess.get_move_obj(data.moves[i].san), true);
+        // Apenas para não enviar vazio.
+        if(typeof data.moves[i].promotion === undefined)
+        {
+          data.moves[i].promotion = "q";
+        }
+
+        movePiece(data.moves[i].from,data.moves[i].to, data.moves[i].promotion, true);
       }
 
     }
@@ -333,14 +336,19 @@ $(function() {
       var title = $('title').text();
       countHiddenMoves++;
 
-      $('title').text(title);
-      $('title').text('(' + countHiddenMoves + ') '+ title);
+      console.log(title);
+      var titlePlusCount = title.replace(/\(\d\)/g, "(" + countHiddenMoves + ")");
+      console.log(titlePlusCount);
+      $('title').text(titlePlusCount);
 
       $(window).on('focus', removeHiddenCount);
 
       function removeHiddenCount(e) {
         countHiddenMoves = 0;
-        $('title').text(title);
+
+        var titleRemovedCount = title.replace(/\(\d\)/g, "");
+
+        $('title').text(titleRemovedCount);
         $(window).off('focus', removeHiddenCount);
       }
     }
@@ -370,7 +378,7 @@ $(function() {
   });
 
   $socket.on('player-resigned', function (data) {
-    $gameOver = true;
+   /* $gameOver = true;
     $('.resign').hide();
     $('.rematch').show();
     unbindMoveHandlers();
@@ -379,7 +387,7 @@ $(function() {
     var message = loser + ' resigned. ' + winner + ' wins.';
     showModal(message);
     $('.feedback-move').text('');
-    $('.feedback-status').text(message);
+    $('.feedback-status').text(message);*/
   });
 
   $socket.on('full', function (data) {
@@ -469,10 +477,10 @@ $(function() {
     if ($side === 'w') {
       $('.chess_board.black').remove();
       $('#board_wrapper').append($chessboardWhite.clone());
+      // $socket.emit('timer-white', {
+      //   'token': $token
+      // });
 
-      $socket.emit('timer-white', {
-        'token': $token
-      });
     } else {
       $('.chess_board.white').remove();
       $('#board_wrapper').append($chessboardBlack.clone());
@@ -561,39 +569,39 @@ $(function() {
     hideModal();
   });
 
-  $('#offer-accept').click(function (e) {
-    e.preventDefault();
-    hideOffer();
-    rematchAccepted();
-  });
+  // $('#offer-accept').click(function (e) {
+  //   e.preventDefault();
+  //   hideOffer();
+  //   rematchAccepted();
+  // });
 
-  $('#offer-decline').click(function (e) {
-    e.preventDefault();
-    hideOffer();
-    rematchDeclined();
-  });
+  // $('#offer-decline').click(function (e) {
+  //   e.preventDefault();
+  //   hideOffer();
+  //   rematchDeclined();
+  // });
 
   $('#modal-window, #offer-window').click(function (e) {
     e.stopPropagation();
   });
 
-  $('.resign').click(function (e) {
-    e.preventDefault();
+  // $('.resign').click(function (e) {
+  //   e.preventDefault();
 
-    $socket.emit('resign', {
-      'token': $token,
-      'color': $side
-    });
-  });
+  //   $socket.emit('resign', {
+  //     'token': $token,
+  //     'color': $side
+  //   });
+  // });
 
-  $('.rematch').click(function (e) {
-    e.preventDefault();
-    showModal('Your offer has been sent.');
+  // $('.rematch').click(function (e) {
+  //   e.preventDefault();
+  //   showModal('Your offer has been sent.');
 
-    $socket.emit('rematch-offer', {
-      'token': $token
-    });
-  })
+  //   $socket.emit('rematch-offer', {
+  //     'token': $token
+  //   });
+  // })
 
   $('a.chat').click(function (e) {
     $('#chat-wrapper').toggle();
