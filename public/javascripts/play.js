@@ -61,15 +61,13 @@ $(function() {
     return el ? el.hasClass('selected') : false;
   }
 
-
   function movePiece(from, to, promotion, rcvd) {
+
     var move = $chess.move({
       'from': from,
       'to': to,
       promotion: promotion
     });
-
-    console.dir(move);
 
     if (move && !$gameOver) {
       var tdFrom = $('td.' + from.toUpperCase());
@@ -83,6 +81,12 @@ $(function() {
       tdTo.addClass('last-target');
       
       var piece = tdFrom.find('a'); // piece being moved
+
+      if(!rcvd)
+      {
+        piece.css('opacity', 0.5);
+      }
+
       var moveSnd = $("#moveSnd")[0];
       unselectPiece(piece.parent());
       
@@ -196,14 +200,24 @@ $(function() {
       $('#moves tbody tr').append('<td><strong>' + move_number + '</strong>. ' + move_pgn + '</td>');
 
       if (rcvd === undefined) {
-        $socket.emit('new-move', {
+
+        $socket.emit('new-vote', {
           'token': $token,
           'move': move
         });
+
+       /* $socket.emit('new-move', {
+          'token': $token,
+          'move': move
+        });*/
       }
 
       if ($chess.game_over()) {
         $gameOver = true;
+
+        $socket.emit('game-over', {
+          'token': $token
+        });
         // $socket.emit('timer-clear-interval', {
         //   'token': $token
         // });
@@ -270,7 +284,7 @@ $(function() {
   function rematchAccepted() {
     $socket.emit('rematch-confirm', {
       'token': $token,
-      'time': $time * 60,
+      'time': $time,
       'increment': $increment
     });
   }
@@ -283,28 +297,79 @@ $(function() {
 
   $socket.emit('join', {
     'token': $token,
-    'time': $time * 60,
+    'time': $time,
     'increment': $increment
+  });
+
+  $socket.on('reset-board', function (data) {
+    $chess.reset();
   });
 
   $socket.on('token-invalid', function (data) {
     showModal('Game link is invalid or has expired.');
   });
 
+  $socket.on('restart-game', function(data) {
+    location.reload();
+  });
+
+  $socket.on('show-vote', function(data) {
+    var pieces = {}
+    
+    console.log("Showing vote " + data.move.color + " " + data.move);
+    console.dir(data.move);
+    
+    if (data.move.color === 'b') {
+      // this is a vote for a white move
+      pieces = {  
+        'p': '&#9823',
+        'q': '&#9813;',
+        'r': '&#9814;',
+        'n': '&#9816;',
+        'b': '&#9815;'
+      };
+    } else {
+      // this is a vote for a black move
+      pieces = {
+        'p': '&#9817',
+        'q': '&#9819;',
+        'r': '&#9820;',
+        'n': '&#9822;',
+        'b': '&#9821;'
+      };
+    }
+
+    var slot = $('td.' + data.move.to.toUpperCase());
+    var square = slot.find('a');
+    
+    if(square.length === 0)
+    {
+      slot.append('<a draggable="false"></a>');
+      square = slot.find('a');
+    }
+
+    var piece = data.move.piece;
+    
+    square.css('opacity', 0.5);
+      
+    var option = data.move.promotion;
+   
+    square.html(pieces[piece]);
+  });
+
   $socket.on('joined', function (data) {
     if (data.color === 'white') {
       $side = 'w';
       $('.chess_board.black').remove();
-      // $socket.emit('timer-white', {
-      //   'token': $token
-      // });
     } else {
       $side = 'b';
       $('.chess_board.white').remove();
       $('.chess_board.black').show();
     }
-    console.log("les moves");
-    console.dir(data.moves);
+
+    $socket.emit('start-timer', {
+      'token': $token
+    });
 
     if(data.moves.length != 0)
     {
@@ -313,45 +378,105 @@ $(function() {
       // Recreate all the game.
       for(var i=0; i<data.moves.length; i++)
       {
-        // Apenas para não enviar vazio.
-        if(typeof data.moves[i].promotion === undefined)
+        if(data.moves[i] !== null)
         {
-          data.moves[i].promotion = "q";
+          // Just to send it not empty
+          if(typeof data.moves[i].promotion === undefined)
+          {
+            data.moves[i].promotion = "q";
+          }
+
+          movePiece(data.moves[i].from,data.moves[i].to, data.moves[i].promotion, true);
         }
 
-        movePiece(data.moves[i].from,data.moves[i].to, data.moves[i].promotion, true);
       }
-
     }
 
     $('#clock li.white').addClass('ticking');
     $('#sendMessage').find('input').addClass($side === 'b' ? 'black' : 'white');
   });
 
+  $socket.on('new-moves', function(data) {
+    console.log("Received new moves " + data.moves);
+
+    $piece = null;
+    $gameOver = false;
+    $chess.reset();
+
+    $('#moves tbody tr').empty();
+    $('#captured-pieces ul').each(function () {
+      $(this).empty();
+    })
+
+    // Restart the boards to the starting position!
+    if ($side === 'w') {
+      $('.chess_board.white').remove();
+      $('#board_wrapper').append($chessboardWhite.clone());
+    } else {
+      $('.chess_board.black').remove();
+      $('#board_wrapper').append($chessboardBlack.clone());
+      $('.chess_board.black').show();
+    }
+    
+    bindMoveHandlers();
+
+    if(data.moves.length != 0)
+    {
+      console.dir(data.moves);
+
+      // Recreate all the game.
+      for(var i=0; i<data.moves.length; i++)
+      {
+        if(data.moves[i] !== null)
+        {
+          // Just to send it not empty
+          if(typeof data.moves[i].promotion === undefined)
+          {
+            data.moves[i].promotion = "q";
+          }
+
+          console.log("Moving piece from " + data.moves[i].from + " to " + data.moves[i].to );
+          movePiece(data.moves[i].from,data.moves[i].to, data.moves[i].promotion, true);
+        }
+      }
+
+    }
+
+  });
+
+
   $socket.on('move', function (data) {
-    movePiece(from=data.move.from, to=data.move.to, promotion=data.move.promotion, rcvd=true);
 
-    if (typeof document.hidden === undefined) return;
-    if (document.hidden) {
-      var title = $('title').text();
-      countHiddenMoves++;
+    if(typeof data.move !== undefined && data !== null)
+    {
+      console.log('I just received move');
+      console.dir(data);
 
-      console.log(title);
-      var titlePlusCount = title.replace(/\(\d\)/g, "(" + countHiddenMoves + ")");
-      console.log(titlePlusCount);
-      $('title').text(titlePlusCount);
+      movePiece(from=data.move.from, to=data.move.to, promotion=data.move.promotion, rcvd=true);
 
-      $(window).on('focus', removeHiddenCount);
+      if (typeof document.hidden === undefined) return;
+      if (document.hidden) {
+        var title = $('title').text();
+        countHiddenMoves++;
 
-      function removeHiddenCount(e) {
-        countHiddenMoves = 0;
+        console.log(title);
+        var titlePlusCount = title.replace(/\(\d\)/g, "(" + countHiddenMoves + ")");
+        console.log(titlePlusCount);
+        $('title').text(titlePlusCount);
 
-        var titleRemovedCount = title.replace(/\(\d\)/g, "");
+        $(window).on('focus', removeHiddenCount);
 
-        $('title').text(titleRemovedCount);
-        $(window).off('focus', removeHiddenCount);
+        function removeHiddenCount(e) {
+          countHiddenMoves = 0;
+
+          var titleRemovedCount = title.replace(/\(\d\)/g, "");
+
+          $('title').text(titleRemovedCount);
+          $(window).off('focus', removeHiddenCount);
+        }
       }
     }
+   
   });
 
   $socket.on('opponent-disconnected', function (data) {
@@ -400,7 +525,7 @@ $(function() {
     var chat_node = $('ul#chat')[0];
     var messageSnd = $("#messageSnd")[0];
 
-    chat.append('<li class="' + data.color + ' left" >' + escapeHTML(data.message) + '</li>');
+    chat.append('<li class="' + data.color + ' left" ><span class="username">' + escapeHTML(data.username) + '</span> ' + escapeHTML(data.message) + '</li>');
 
     if (chat.is(':visible') && chat_node.scrollHeight > 300) {
       setTimeout(function() { chat_node.scrollTop = chat_node.scrollHeight; }, 50);
@@ -474,18 +599,21 @@ $(function() {
     $('.rematch').hide();
     $('.resign').show();
 
+    // Restart the boards to the starting position!
     if ($side === 'w') {
       $('.chess_board.black').remove();
       $('#board_wrapper').append($chessboardWhite.clone());
-      // $socket.emit('timer-white', {
-      //   'token': $token
-      // });
+ 
 
     } else {
       $('.chess_board.white').remove();
       $('#board_wrapper').append($chessboardBlack.clone());
       $('.chess_board.black').show();
     }
+    
+    $socket.emit('start-timer', {
+      'token': $token
+    });
 
     bindMoveHandlers();
     $('#sendMessage').find('input').removeClass('white black').addClass($side === 'b' ? 'black' : 'white');
@@ -621,10 +749,11 @@ $(function() {
     var input = $(this).find('input');
     var message = input.val();
     var color = $side === 'b' ? 'black' : 'white';
+    var username = $('#username').val();
 
     if (!/^\W*$/.test(message)) {
       input.val('');
-      $('ul#chat').append('<li class="' + color + ' right" >' + escapeHTML(message) + '</li>');
+      $('ul#chat').append('<li class="' + color + ' right" ><span class="username">' + escapeHTML(username) + '</span> ' + escapeHTML(message) + '</li>');
 
       var chat_node = $('ul#chat')[0];
       if (chat_node.scrollHeight > 300) {
@@ -634,7 +763,8 @@ $(function() {
       $socket.emit('send-message', {
         'message': message,
         'color': color,
-        'token': $token
+        'token': $token,
+        'username': username
       });
     }
   });

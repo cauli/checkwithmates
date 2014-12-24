@@ -22,6 +22,7 @@ $(function () {
   $('#play').click(function (ev) {
     var min = parseInt($('#minutes').val());
     var sec = parseInt($('#seconds').val());
+
     if (!isNaN(min) && min > 0 && min <= 50 && !isNaN(sec) && sec >= 0 && sec <= 50) {
       $time = min;
       $increment = sec;

@@ -442,7 +442,7 @@ footer {
 
 /* Chat */
 #chat-wrapper{
-  display: none;
+  display: block;
   position: absolute;
   width: 270px;
   right: 10px;
@@ -483,6 +483,11 @@ footer {
     font-size: .9rem;
     margin: 5px 5%;
     display: block;
+  }
+
+  .username
+  {
+    font-weight: bold;
   }
 }
 

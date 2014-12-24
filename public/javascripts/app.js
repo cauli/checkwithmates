@@ -1,16 +1,17 @@
 var $URL, $socket;
   
 $(function () {
-  //var ENV = 'openshift';
-  var ENV = 'dev';
+  var ENV = 'development';
+  //var ENV = 'production';
   var $WS;
 
-  if (ENV === 'dev') {
+  if (ENV === 'production') {
     $URL = 'https://simultaneouschess.herokuapp.com';
     $WS = $URL;
-  } else if (ENV === 'openshift') {
-    $URL = 'http://simultaneouschess.herokuapp.com/';
-    $WS = 'http://simultaneouschess.herokuapp.com:8000/';
+  }
+  else if(ENV == 'development') {
+    $URL = 'http://localhost:3000';
+    $WS = $URL;
   }
 
   $socket = io.connect($WS);
