@@ -2,9 +2,9 @@ doctype 5
 html
   head
     - if (typeof(title) !== 'undefined')
-      title #{title} | DemocraChess
+      title #{title} | CHECKwithMATES
     - else
-      title Reti Chess
+      title CHECKwithMATES
     meta(charset='utf-8')
     meta(name='robots', content='index, follow')
     meta(itemprop='name=Reti Chess')
@@ -46,11 +46,20 @@ html
         
     footer
       #footer.clearfix
-        p.center 2013 - 2014. Reti Chess is available under 
-          a(href='http://opensource.org/licenses/MIT')  the MIT License (MIT)
-          . Fork me on 
-          a(href='http://github.com/romanmatiasko/reti-chess')  Github
+        img(src="images/logo_footer.png")
+        p Based on the open source projects
+          a(href='http://opensource.org/licenses/MIT')  Reti Chess
+          ,  
+          a(href='http://opensource.org/licenses/MIT')  chess.js
+          ,
+          a(href='http://opensource.org/licenses/MIT')  Node
+          &
+          a(href='http://opensource.org/licenses/MIT')  jQuery
           .
+        p Chess pieces graphics by Author
+        p Development and Design by 
+          a(href='http://cau.li')  Cauli
+        p Thanks for contributing with ideas and testing: Tainan Tomaz
 
     script(type='text/javascript', src='/javascripts/jquery.js')
     script(type='text/javascript', src='/javascripts/jquery.stickyFooter.js')

@@ -1,8 +1,8 @@
 var $URL, $socket;
   
 $(function () {
-  //var ENV = 'development';
-  var ENV = 'production';
+  var ENV = 'development';
+  //var ENV = 'production';
   var $WS;
 
   if (ENV === 'production') {
