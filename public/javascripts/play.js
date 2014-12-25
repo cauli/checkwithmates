@@ -90,11 +90,13 @@ $(function() {
       var moveSnd = $("#moveSnd")[0];
       unselectPiece(piece.parent());
       
+      /*
       if (tdTo.html() !== '') { //place captured piece next to the chessboard
         $('#captured-pieces')
           .find($chess.turn() === 'b' ? '.b' : '.w')
           .append('<li>' + tdTo.find('a').html() + '</li>');
       }
+      */
       
       tdTo.html(piece);
 
@@ -319,42 +321,66 @@ $(function() {
     console.log("Showing vote " + data.move.color + " " + data.move);
     console.dir(data.move);
     
-    if (data.move.color === 'b') {
+    var color = data.move.color;
+
+    var colorClass;
+
+    if (color === 'b') {
       // this is a vote for a white move
       pieces = {  
         'p': '&#9823',
-        'q': '&#9813;',
-        'r': '&#9814;',
-        'n': '&#9816;',
-        'b': '&#9815;'
-      };
-    } else {
-      // this is a vote for a black move
-      pieces = {
-        'p': '&#9817',
         'q': '&#9819;',
         'r': '&#9820;',
         'n': '&#9822;',
         'b': '&#9821;'
       };
+
+      colorClass = 'blackCount';
+    } else {
+      // this is a vote for a black move
+      pieces = {
+        'p': '&#9817',
+        'q': '&#9813;',
+        'r': '&#9814;',
+        'n': '&#9816;',
+        'b': '&#9815;'
+      };
+
+      colorClass = 'whiteCount';
     }
 
     var slot = $('td.' + data.move.to.toUpperCase());
     var square = slot.find('a');
-    
+    var piece = data.move.piece;
+
     if(square.length === 0)
     {
-      slot.append('<a draggable="false"></a>');
+      console.log("Sq len 0");
+
+
+      slot.append('<span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san + '</span></span><a draggable="false">'+pieces[piece]+'</a>');
       square = slot.find('a');
     }
+    else
+    {
+      console.log("Sq len > 0");
+      if(slot.find('.count').length === 0)
+      {
+        console.log("Sq count === 0");
+        slot.prepend('<span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san + '</span></span>')
+      }
+      else
+      {
+        slot.find('.count').text(data.count);
+        slot.find('.san').text(data.move.san);
+      }
 
-    var piece = data.move.piece;
-    
-    square.css('opacity', 0.5);
+  
+    }
+
+    square.css('opacity', 0.25);
       
-    var option = data.move.promotion;
-   
-    square.html(pieces[piece]);
+    // var promotion = data.move.promotion;
   });
 
   $socket.on('joined', function (data) {

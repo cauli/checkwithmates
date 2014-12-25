@@ -202,10 +202,42 @@ io.sockets.on('connection', function (socket) {
       else
       {
         console.log("Showing vote for the masses.");
+        games[data.token].moveVotes.push(data.move);
+
+        var sanMoveVotes = [];
         
+        // Makes a "san" copy of the moves stored
+        games[data.token].moveVotes.forEach(function(move) {
+          sanMoveVotes.push(move.san)
+        });
+
+        console.log("SanMoveVotes = " + sanMoveVotes);
+
+        console.log("CountOccurences = " + countOccurences(data.move.san));
+        
+        data.count = countOccurences(data.move.san);
+
+        function countOccurences(arr) {
+          var count = 0;
+
+          for(var i = 0; i < sanMoveVotes.length; i ++)
+          {
+
+            if(sanMoveVotes[i] == data.move.san)
+            {
+              console.log(sanMoveVotes[i] + " is equal to " + data.move.san);
+              count++;
+            }
+          }
+
+          return count;
+        }
+
+
+
         io.sockets.in(data.token).emit('show-vote', data);
 
-        games[data.token].moveVotes.push(data.move);
+        
       }
     }
   });
@@ -247,9 +279,7 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('send-message', function (data) {
     if (data.token in games) {
-      if (opponent) {
-        socket.broadcast.emit('receive-message', data);
-      }
+      socket.broadcast.emit('receive-message', data);
     }
   });
 

@@ -265,6 +265,39 @@ span#game-type {
 input, button {
   font-family: 'Open Sans'; }
 
+.count
+{
+  position: relative;
+  top: 0;
+  left: 50px;
+  font-size: 12px;
+  width: 44px;
+  height: 22px;
+  background-color: red;
+  border-radius: 11px;
+  color: white;
+  font-weight: normal;
+  display: block;
+  margin-bottom: -22px;
+  line-height: 22px;
+}
+
+.blackCount
+{
+  background-color: #111;
+  color: #eee;
+}
+.whiteCount
+{
+  background-color: #eee;
+  color: #111;
+}
+
+.san
+{
+  font-weight:bolder;
+}
+
 input.game_link {
   width: 80%;
   height: 50px;
