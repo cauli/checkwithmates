@@ -7,19 +7,16 @@ block head
     $increment = #{increment};
 
 block content
-  
   div.bg#playBg
+
+  header.clearfix
+    img(src="/images/logo_header.png")#logo_header
 
   audio(id='moveSnd', preload='auto')
     source(src='/sounds/move.mp3')
     source(src='/sounds/move.ogg')
   audio(id='messageSnd', preload='auto')
     source(src='/sounds/message.mp3')
-
-  ul#clock
-      li.white
-      li.black
-    span#game-type
 
   #chat-wrapper
     h4 Chat
@@ -31,23 +28,14 @@ block content
   
   #captured-pieces
     ul.w
-    ul.b
-
+    ul.b   
 
   #board_moves_wrapper.clearfix
-    label(id='sounds_label')
-      input(type='checkbox', id='sounds')
-      |  Enable sounds
-    
-    table#moves_left.clearfix
-      thead
-        tr
-          th Table of moves
-      tbody
-        tr
-
+    div.team_info#moves_left
+      ul.clock
+        li.white
+      
     #board_wrapper
-
       table.chess_board.white
         tr
           td.A8(data-id='A8', draggable='true')
@@ -259,12 +247,9 @@ block content
           td.A8(data-id='A8', draggable='true')
             a.black.rook(draggable='true') &#9820;
 
-    table#moves.clearfix
-      thead
-        tr
-          th Table of moves
-      tbody
-        tr
+    div.team_info#moves
+      ul.clock
+        li.black
     
     span.promotion
       label(id='for_promotion') Promotion: 

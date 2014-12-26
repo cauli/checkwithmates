@@ -5,7 +5,7 @@ $(function () {
 
   setInterval(function() {
     $socket.emit('ask-for-rooms');
-  }, 10000);
+  }, 6000);
  
   $socket.on('rooms', function (data) {
     console.log("Got rooms!")
@@ -17,6 +17,11 @@ $(function () {
     for(var i=0; i<data.rooms.length; i++)
     {
       var link = $URL + '/play/' + data.rooms[i].token + '/' + data.rooms[i].time + '/0'; 
+
+      if(i > 0)
+      {
+        $('#room-list').append("<span class='separator'></span>");
+      }
       $('#room-list').append("<a href='"+link+"'>"+ data.rooms[i].name + " - " + data.rooms[i].players + " playing</a>");
     }
   });
@@ -57,9 +62,11 @@ $(function () {
 
     $time = 10;
     $increment = 0;
+    
     $socket.emit('start', {
       'creatorName':$nickname
     });
+
     $('#waiting').text('Generating game link').slideDown(400);
     ev.preventDefault();
   });

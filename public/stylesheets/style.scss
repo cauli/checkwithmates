@@ -8,6 +8,7 @@ $light-grey: #9B9DA4;
 $green: #67D0B5;
 $dark-purple: #1F1F20;
 $shake:8px;
+$black-color: #39393B;
 
 @mixin all-transition{
   -moz-transition: all 0.2s ease-in-out;
@@ -35,6 +36,7 @@ html { font-size: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; -we
     content: " ";
     display: table;
 }
+
 
 input#nickname
 {
@@ -71,15 +73,48 @@ input#nickname.invalid
   height:240px;
   border-radius:4px;
   background-color:#E5E3E3;
+  margin-bottom:60px;
+  overflow-y: scroll;
 }
+
+
+#room-list .separator
+{
+  display:block;
+  width:50%;
+  height:1px;
+  background-color:$light-grey;
+  margin-top:0;
+  margin-bottom:0;
+  margin-left:25%;
+}
+
+#room-list a
+{
+  font-family:'Open sans', sans-serif;
+  color:$dark-grey;
+  font-size:20px;
+  text-align:center;
+  width:100%;
+  font-weight:400;
+  text-decoration:none;
+  display:inline-block;
+  padding: 10px 0 10px 0;
+  margin: 0 0;
+  transition:.2s;
+}
+
+#room-list a:hover
+{
+  background-color:$grey;
+ 
+}
+
 
 #create_form
 {
-  position:absolute;
+  position:relative;
   width:305px;
-  left:50%;
-  margin-left:-152px;
-  top:51%;
 }
 
 #play
@@ -161,8 +196,9 @@ input#nickname.invalid
 {
   position:absolute;
   left:50%;
-  margin-left:-110px;
-  top:14%;
+  margin-left:-310px;
+  top:40%;
+  margin-top:-100px;
 }
 
 footer, header, section {
@@ -197,6 +233,15 @@ p {
   font-size: 1rem;
 }
 
+h1
+{
+  font-family: 'Sorts Mill Goudy', serif;
+  font-style: italic;
+  color:$green;
+  font-size:36px;
+  margin-bottom:20px;
+}
+
 h1.knight {
   height: 122px;
   width: 122px;
@@ -205,7 +250,7 @@ h1.knight {
 }
 
 h2 {
-  font-family: 'Cherry Swash';
+  font-family: 'Sorts Mill Goudy', serif;
   font-weight: 400;
   font-size: 2rem;
   text-align: center;
@@ -358,6 +403,13 @@ h3 {
   }
 }
 
+#logo_header
+{
+  display:block;
+  margin:0 auto;
+  margin-top:50px;
+}
+
 header {
   position: absolute;
   left:0;
@@ -366,23 +418,30 @@ header {
   width: 100%;
   height: 128px;
   margin-bottom:256px;
-  opacity:0.8;
-  background-color:$dark-purple;
+  opacity:1;
+  background:$dark-purple;
+  background: rgba(30,30,32,0.80);
+  box-shadow: 0px 2px 2px 0px rgba(0,0,0,0.30);
 }
 
-#clock{
-  width: 148px;
-  height: 50px;
-  position: absolute;
+.clock{
+  width: auto;
+  min-width: 100%;
+  height: 86px;
+  font-size:60px;
+  font-weight:700;
+  position: relative;
   text-align: center;
-  border: 4px solid lighten($grey, 5%);
+  display: inline-block;
 
   li{
-    width: 70px;
+    width: 100%;
     display: inline-block;
-    line-height: 42px;
+    line-height: 82px;
+    height: 100%;
     opacity: .9;
     position: absolute;
+    left: 0;
   }
   li.white{
     left: 0;
@@ -392,19 +451,17 @@ header {
   li.black{
     right: 0;
     color: #fff;
-    background: #424242;
+    background: $black-color;
   }
   li.ticking{
     z-index: 1;
-    font-size: 1.125rem;
     opacity: 1;
-    box-shadow: 0 0 5px lighten($grey, 5%);
-    -webkit-transform: scale(1.2);
-    -moz-transform: scale(1.2);
-    -o-transform: scale(1.2);
-    -ms-transform: scale(1.2);
-    transform: scale(1.2);
-    @include all-transition;
+    /*-webkit-transform: scale(1.1);
+    -moz-transform: scale(1.1);
+    -o-transform: scale(1.1);
+    -ms-transform: scale(1.1);
+    transform: scale(1.1);
+    @include all-transition;*/
   }
 }
 
@@ -416,11 +473,20 @@ span#game-type{
   display:none
 }
 
+#posRight
+{
+  display:block;
+  width:300px;
+  float:right;
+  margin-right:100px;
+  margin-top:50px;
+}
+
 #container_wrapper {
-  max-width: 960px;
+  max-width: 1024px;
   width: 100%;
   height: auto;
-  padding: 1em 2em;
+  padding: 0em 1em;
   margin: 0 auto;
   clear: both;
 }
@@ -433,9 +499,6 @@ span#game-type{
 }
 
 #form{
-  width: 100%;
-  height: 200px;
-  margin: 0 auto;
 
   fieldset{
     border: 0;
@@ -565,7 +628,7 @@ a.button:hover{
 }
 
 p#waiting {
-  font-family: 'Cherry Swash';
+  font-family: 'Sorts Mill Goudy', serif;
   font-size: 1.275rem;
   color: darken($red, 5%);
   width: 100%;
@@ -635,7 +698,7 @@ footer {
   background: lighten($grey, 5%);
 
   h4{
-    font-family: 'Cherry Swash';
+    font-family: 'Sorts Mill Goudy', serif;
     font-size: 1.225rem;
     height: 3em;
     line-height: 3em;
@@ -750,7 +813,6 @@ ul#chat{
 }
 
 /* Captured pieces */
-
 #captured-pieces{
   position: absolute;
   width: 100px;
@@ -776,42 +838,39 @@ ul#chat{
 
 #board_moves_wrapper {
   width: 100%;
-  max-width: 800px;
+  max-width: 980px;
   min-height: 600px;
+  margin-top:100px;
   margin: 0 auto;
+  margin-top: 200px;
 }
 
-table#moves {
+.team_info {
   overflow-x: hidden;
   overflow-y: auto;
   width: 230px;
   height: 518px;
-  background: lighten($grey, 5%);
-  box-shadow: inset 0 -4px $grey;
-  margin-left: 10px;
-  border-radius: 2px;
-  border-bottom: 4px solid $grey;
   display: block;
-  float: right;
+  margin: 0;
+
 }
 
-table#moves_left {
-  overflow-x: hidden;
-  overflow-y: auto;
-  width: 230px;
-  height: 518px;
-  background: lighten($grey, 5%);
-  box-shadow: inset 0 -4px $grey;
-  margin-left: 10px;
-  border-radius: 2px;
-  border-bottom: 4px solid $grey;
-  display: block;
+div#moves_left {
   float: left;
+  background-color:#FFFFFF;
+  background-color:rgba(255,255,255,0.68);
 }
+
+div#moves {
+  float: right;
+  background-color:$black-color;
+  background: rgba(56,56,59,0.50);
+}
+
 
 
 #moves thead {
-  font-family: 'Cherry Swash';
+  font-family: 'Sorts Mill Goudy', serif;
   width: 270px;
   height: 3em;
   line-height: 3em;
@@ -1014,7 +1073,7 @@ span.promotion{
     font-size: 1rem;
   }
 
-  ul#clock{
+  ul.clock{
     width: 118px;
 
     li{

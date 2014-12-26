@@ -351,7 +351,7 @@ io.sockets.on('connection', function (socket) {
         } 
         else
         {
-          console.log("Interval end for " + color);
+          // console.log("Interval end for " + color);
 
           if(games[token].moveVotes.length > 0)
           {

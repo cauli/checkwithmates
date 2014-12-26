@@ -237,7 +237,7 @@ $(function() {
           //   'token': $token
           // });
         }
-        $('#clock li').each(function() {
+        $('.clock li').each(function() {
           $(this).toggleClass('ticking');
         });
       }
@@ -300,7 +300,8 @@ $(function() {
   $socket.emit('join', {
     'token': $token,
     'time': $time,
-    'increment': $increment
+    'increment': $increment,
+    
   });
 
   $socket.on('reset-board', function (data) {
@@ -418,7 +419,7 @@ $(function() {
       }
     }
 
-    $('#clock li.white').addClass('ticking');
+    $('.clock li.white').addClass('ticking');
     $('#sendMessage').find('input').addClass($side === 'b' ? 'black' : 'white');
   });
 
@@ -573,7 +574,7 @@ $(function() {
       sec = '0' + sec;
     }
     
-    $('#clock li.' + color).text(min + ':' + sec);
+    $('.clock li.' + color).text(min + ':' + sec);
   });
 
   $socket.on('countdown-gameover', function (data) {
@@ -608,13 +609,13 @@ $(function() {
     $chess = new Chess();
     $gameOver = false;
 
-    $('#clock li').each(function () {
-      $(this).text($time + ':00');
+    $('.clock li').each(function () {
+      $(this).text($time + 's');
     });
 
-    if ($('#clock li.black').hasClass('ticking')) {
-      $('#clock li.black').removeClass('ticking');
-      $('#clock li.white').addClass('ticking');
+    if ($('.clock li.black').hasClass('ticking')) {
+      $('.clock li.black').removeClass('ticking');
+      $('.clock li.white').addClass('ticking');
     }
 
     $('#moves tbody tr').empty();
@@ -647,10 +648,11 @@ $(function() {
 
   /* gameplay */
 
-  $('#clock li').each(function() {
-    $(this).text($time + ':00');
+  $('.clock li').each(function() {
+    $(this).text($time+'s');
   });
-  $('#game-type').text($time + '|' + $increment);
+  
+  // $('#game-type').text($time + '|' + $increment);
 
   function movePieceFromHandler(e) {
     var piece = $(this);
