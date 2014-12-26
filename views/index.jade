@@ -1,22 +1,20 @@
 extends layout
 
 block content
+  
+  div.bg#loginBg
+
+  img(src="/images/logo_login.png")#logo_login(alt="Check with Mates")
+
+  div#room-list
+  
   div#form
     form#create_form(action='')
-      fieldset
-        label Minutes per side: 
-          input#minutes(type='number', value='30', min='1', max='50', required)
-        label(style='padding-left: 2em;') Increment in seconds:
-          input#seconds(type='number', value='0', min='0', max='50', required)
-      input#game_link.game_link(type='text', readonly, value='Game link will be generated here.')
-      button.button#play(type='submit') Play
-  
+      input#nickname(placeholder='insert nickname', maxlength='15')
+      div#play(type='submit') let's play
+    div#game_link.game_link
+
     p#waiting Generating game link.
   
-  p.center Click the button play to create a game. Send the link to your friend. Once the link is opened in your friend's browser, game should begin shortly. Colours are picked randomly by computer. 
-
-  p.center
-    a(href='/about', class='alpha') Read more about Reti Chess
-
 block scripts
   script(type='text/javascript', src='/javascripts/start.js')

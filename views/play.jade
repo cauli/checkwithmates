@@ -7,34 +7,47 @@ block head
     $increment = #{increment};
 
 block content
-  header.clearfix
-    ul#clock
-      li.white
-      li.black
-    span#game-type
+  
+  div.bg#playBg
+
   audio(id='moveSnd', preload='auto')
     source(src='/sounds/move.mp3')
     source(src='/sounds/move.ogg')
   audio(id='messageSnd', preload='auto')
     source(src='/sounds/message.mp3')
 
+  ul#clock
+      li.white
+      li.black
+    span#game-type
+
   #chat-wrapper
     h4 Chat
-    a.close x
     ul#chat
     input#username(type='text', placeholder='Nome de usuário')
-    span Write your message:
+    span state your claim
     form#sendMessage
       input
+  
+  #captured-pieces
+    ul.w
+    ul.b
+
 
   #board_moves_wrapper.clearfix
     label(id='sounds_label')
       input(type='checkbox', id='sounds')
       |  Enable sounds
+    
+    table#moves_left.clearfix
+      thead
+        tr
+          th Table of moves
+      tbody
+        tr
+
     #board_wrapper
-      #captured-pieces
-        ul.w
-        ul.b
+
       table.chess_board.white
         tr
           td.A8(data-id='A8', draggable='true')

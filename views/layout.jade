@@ -1,3 +1,5 @@
+- var showHeader = false
+
 doctype 5
 html
   head
@@ -14,7 +16,8 @@ html
     link(rel='stylesheet', href='/stylesheets/style.css')
     script(type='text/javascript', src='/socket.io/socket.io.js')
     block head
-    link(href='https://fonts.googleapis.com/css?family=Cherry+Swash|Open+Sans:400,800', rel='stylesheet', type='text/css')
+
+    link(href='https://fonts.googleapis.com/css?family=Sorts+Mill+Goudy:400italic|Open+Sans:400,700,800', rel='stylesheet', type='text/css')
     //if IE
       script(src='http://html5shiv.googlecode.com/svn/trunk/html5.js')
   body
@@ -39,27 +42,15 @@ html
         p#offer-message Offer.
         a#offer-accept.button(href='#') Accept
         a#offer-decline.button.button--red(href='#') Decline
+    
+    if showHeader
+      header.clearfix
 
     #container_wrapper.clearfix
       #container.clearfix
         block content
         
-    footer
-      #footer.clearfix
-        img(src="images/logo_footer.png")
-        p Based on the open source projects
-          a(href='http://opensource.org/licenses/MIT')  Reti Chess
-          ,  
-          a(href='http://opensource.org/licenses/MIT')  chess.js
-          ,
-          a(href='http://opensource.org/licenses/MIT')  Node
-          &
-          a(href='http://opensource.org/licenses/MIT')  jQuery
-          .
-        p Chess pieces graphics by Author
-        p Development and Design by 
-          a(href='http://cau.li')  Cauli
-        p Thanks for contributing with ideas and testing: Tainan Tomaz
+    include footer.jade
 
     script(type='text/javascript', src='/javascripts/jquery.js')
     script(type='text/javascript', src='/javascripts/jquery.stickyFooter.js')

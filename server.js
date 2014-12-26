@@ -96,29 +96,67 @@ io.sockets.on('connection', function (socket) {
     var b = new Buffer(Math.random() + new Date().getTime() + socket.id);
     token = b.toString('base64').slice(12, 32);
 
-    //token is valid for 5 minutes
+    var creatorName = data.creatorName;
+
+    //token is valid for 20 minutes
     var timeout = setTimeout(function () {
       if (games[token].players.length === 0) {
         delete games[token];
         socket.emit('token-expired');
       }
-    }, 5 * 60 * 1000);
+    }, 20 * 60 * 1000);
 
     games[token] = {
       'creator': socket,
+      'creatorName': creatorName,
       'players': [],
+      'time': 10,
       'interval': null,
       'timeout': timeout,
       'moveVotes': [],
       'currentColor' : "white",
-      'timerStarted' : false
+      'timerStarted' : false,
+      'name' : creatorName+"\'s room",
+      'token' : token.toString()
     };
 
     games[token].moves = [];
 
     socket.emit('created', {
-      'token': token
+      'token': token,
+      'creatorName': creatorName
     });
+  });
+
+  socket.on('ask-for-rooms', function(data) {
+    var sendGames = [];
+
+    for (var key in games) {
+       var obj = games[key];
+       var sendObj = {};
+
+       sendObj['time'] = obj['time'];
+       sendObj['currentColor'] = obj['currentColor'];
+       sendObj['name'] = obj['name'];
+       sendObj['time'] = obj['time'];
+       sendObj['token'] = obj['token'];
+       sendObj['players'] = obj['players'].length;
+
+       sendGames.push(sendObj);
+
+       /*for (var prop in obj) {
+          if(obj.hasOwnProperty(prop)){
+
+            console.log(prop + " = " + obj[prop]);
+          }
+       }*/
+    }
+
+    console.dir(sendGames);
+
+    socket.emit('rooms', { 
+      'rooms' : sendGames
+    })
   });
 
   socket.on('join', function (data) {
@@ -233,32 +271,14 @@ io.sockets.on('connection', function (socket) {
           return count;
         }
 
-
-
         io.sockets.in(data.token).emit('show-vote', data);
-
-        
       }
     }
   });
 
-  /*socket.on('new-move', function (data) {
-    makeMove(data);
-  });
-
-  function makeMove(data)
-  {
-    if (data.token in games) {
-      games[data.token].moves.push(data.move)
-
-      // TO-DO Create voting system here
-      socket.broadcast.emit('move', {
-          'move': data.move
-      });
-    }
-  }*/
-
   socket.on('disconnect', function (data) {
+    console.log('Player disconnected');
+
     var player, opponent, game;
     for (var token in games) {
     game = games[token];
@@ -267,11 +287,15 @@ io.sockets.on('connection', function (socket) {
         player = game.players[j];
 
         if (player.socket === socket) {
+
+          // remove from the players array of the game
+          games[token].players.splice(j, 1);
+
           opponent = game.players[Math.abs(j - 1)];
           if (opponent) {
             opponent.socket.emit('opponent-disconnected');
           }
-          clearInterval(games[token].interval);
+          //clearInterval(games[token].interval);
         }
       }
     }
@@ -286,7 +310,7 @@ io.sockets.on('connection', function (socket) {
   socket.on('start-timer', function (data) {
     if (data.token in games)
     {
-       if(games[data.token].timerStarted === false)
+       if(games[data.token].timerStarted === false && games[data.token].players.length > 1)
        {
           games[data.token].timerStarted = true;
           startTimer('white', data.token, socket);
@@ -303,7 +327,7 @@ io.sockets.on('connection', function (socket) {
 
     if (token in games) {
       games[token].currentColor = color;
-      game.timeWhite = game.timeBlack = 10;
+      game.timeWhite = game.timeBlack = games[token].time = 10;
 
       games[token].interval = setInterval(function() {
         
@@ -351,7 +375,6 @@ io.sockets.on('connection', function (socket) {
               var mostCommonSan = mostFrequent(sanMoveVotes);
 
               mostCommonMove =  _.find(games[token].moveVotes, { 'san': mostCommonSan });
-
             }
 
             var data = { 'token': token, 'move': mostCommonMove };
@@ -390,19 +413,12 @@ io.sockets.on('connection', function (socket) {
 
   function makeMove(data, token)
   {
-    console.log("MakeMove!");
     if (data.token in games) {
       if(typeof data.move !== undefined)
       {
         games[data.token].moves.push(data.move)
 
-        // TO-DO Create voting system here
-        /*socket.broadcast.emit('move', {
-            'move': data.move
-        });*/
-
-        console.log('I am emitting new-moves');
-        console.dir(games[data.token].moves);
+        // console.dir(games[data.token].moves);
         
         io.sockets.in(token).emit('new-moves', {
             'moves': games[data.token].moves
