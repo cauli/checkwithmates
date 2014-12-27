@@ -2,17 +2,24 @@ doctype 5
 html
   head
     - if (typeof(title) !== 'undefined')
-      title #{title} | CHECKwithMATES
+      title #{title} | Check with Mates
     - else
       title CHECKwithMATES
     meta(charset='utf-8')
     meta(name='robots', content='index, follow')
-    meta(itemprop='name=Reti Chess')
-    meta(name='description', content='Reti Chess is a lightweight real-time chess app built in Node.js with use of Express framework and Socket.IO')
+    meta(itemprop='name=Check with Mates')
+    meta(name='description', content='Check with Mates is a massive multiplayer chess variant. Vote for the best moves and have fun with your friends.')
     meta(name='viewport', content='width=device-width, initial-scale=1')
+
+    meta(property='og:title', content='Check with Mates')
+    meta(property='og:url', content='http://www.checkwithmates.com/')
+    meta(property='og:image', content='http://www.checkwithmates.com/images/OpenGraph.png')
+    meta(property='og:description', content='Check with Mates is a massive multiplayer chess variant. Vote for the best moves and have fun with your friends.')
+
     link(rel='shortcut icon', href='/images/logo.png')
     link(rel='stylesheet', href='/stylesheets/style.css')
     script(type='text/javascript', src='/socket.io/socket.io.js')
+    script(type='text/javascript', src='/javascripts/lodash.min.js')
     block head
 
     link(href='https://fonts.googleapis.com/css?family=Sorts+Mill+Goudy:400italic|Open+Sans:400,700,800', rel='stylesheet', type='text/css')

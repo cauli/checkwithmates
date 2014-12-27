@@ -301,7 +301,7 @@ $(function() {
     'token': $token,
     'time': $time,
     'increment': $increment,
-    
+    'session': $session
   });
 
   $socket.on('reset-board', function (data) {
@@ -420,12 +420,34 @@ $(function() {
     }
 
     $('.clock li.white').addClass('ticking');
-    $('#sendMessage').find('input').addClass($side === 'b' ? 'black' : 'white');
+
+    if($side === 'b')
+    {
+      // Remover o sender do lado esquerdo
+      $('.white.sendMessage').remove();
+      $('.white#chat').css('max-height','237px');
+    }
+    else
+    {
+      // Remover o sender do lado direito
+      $('.black.sendMessage').remove();
+      $('.black#chat').css('max-height','237px');
+    }
+
+    var randomPhrases = [ "state your claim",
+                          "we will never resign",
+                          "Karpov would be proud",
+                          "how to en passant?",
+                          "genius!",
+                          data.moves.length + " moves already?" 
+                        ]
+
+
+    $('.sendMessage').find('input').addClass($side === 'b' ? 'black' : 'white');
+    $('.sendMessage').find('input').attr('placeholder', randomPhrases[Math.floor(Math.random() * randomPhrases.length)])
   });
 
   $socket.on('new-moves', function(data) {
-    console.log("Received new moves " + data.moves);
-
     $piece = null;
     $gameOver = false;
     $chess.reset();
@@ -449,7 +471,7 @@ $(function() {
 
     if(data.moves.length != 0)
     {
-      console.dir(data.moves);
+      //console.dir(data.moves);
 
       // Recreate all the game.
       for(var i=0; i<data.moves.length; i++)
@@ -462,7 +484,7 @@ $(function() {
             data.moves[i].promotion = "q";
           }
 
-          console.log("Moving piece from " + data.moves[i].from + " to " + data.moves[i].to );
+          //console.log("Moving piece from " + data.moves[i].from + " to " + data.moves[i].to );
           movePiece(data.moves[i].from,data.moves[i].to, data.moves[i].promotion, true);
         }
       }
@@ -513,8 +535,8 @@ $(function() {
     /* $('.resign').off().remove();
     
 
-    $('#sendMessage').off();
-    $('#sendMessage').submit(function (e) {
+    $('.sendMessage').off();
+    $('.sendMessage').submit(function (e) {
       e.preventDefault();
       showModal("Your opponent has disconnected. You can't send messages.");
     });
@@ -542,15 +564,88 @@ $(function() {
     $('.feedback-status').text(message);*/
   });
 
+  $socket.on('receive-players', function (data) {
+    drawPlayers(data.players);
+  });
+
+  function drawPlayers(players)
+  {
+    console.log("Received players");
+    console.dir(players);
+
+    var blackPlayers = _.where(players, { 'color': 'black' } );
+    var whitePlayers = _.where(players, { 'color': 'white' } );
+
+    $('h4.black.cnt > span.count_players').text(blackPlayers.length);
+    $('h4.white.cnt > span.count_players').text(whitePlayers.length);
+
+    if(whitePlayers.length > 1)
+    {
+      $('h4.white.cnt > span.count_players_phrase').text(' players for white');
+    }
+    else
+    {
+      $('h4.white.cnt > span.count_players_phrase').text(' player for white');
+    }
+
+    if(blackPlayers.length > 1)
+    {
+      $('h4.black.cnt > span.count_players_phrase').text(' players for black');
+    }
+    else
+    {
+      $('h4.black.cnt > span.count_players_phrase').text(' player for black');
+    }
+    
+    var $whiteUL =  $('ul.player_holder.white');
+    var $blackUL =  $('ul.player_holder.black');
+    
+    $whiteUL.empty();
+    $blackUL.empty();
+
+    drawPlayers($whiteUL, whitePlayers);
+    drawPlayers($blackUL, blackPlayers);
+    
+    function drawPlayers(ul, array)
+    {
+      for(var i=0; i< array.length; i++)
+      {
+        var admin = false;
+        var adminTag = "";
+
+        if(array[i].admin === true)
+        {
+          admin = true;
+          adminTag = "@";
+        }
+
+        ul.append('<li>'+array[i].name+' '+adminTag+'<span class="lastMove">'+array[i].lastMove+'</span></li>')
+      }
+    }
+  }
+
   $socket.on('full', function (data) {
     alert("This game already has two players. You have to create a new one.");
     window.location = '/';
   });
 
   $socket.on('receive-message', function (data) {
-    var chat = $('ul#chat');
+
+    var chat;
+
+    if(data.color == 'white')
+    {
+      chat = $('ul.white#chat');
+    }
+    else
+    {
+      chat = $('ul.black#chat');
+    }
+
     var chat_node = $('ul#chat')[0];
     var messageSnd = $("#messageSnd")[0];
+
+
 
     chat.append('<li class="' + data.color + ' left" ><span class="username">' + escapeHTML(data.username) + '</span> ' + escapeHTML(data.message) + '</li>');
 
@@ -643,7 +738,7 @@ $(function() {
     });
 
     bindMoveHandlers();
-    $('#sendMessage').find('input').removeClass('white black').addClass($side === 'b' ? 'black' : 'white');
+    $('.sendMessage').find('input').removeClass('white black').addClass($side === 'b' ? 'black' : 'white');
   });
 
   /* gameplay */
@@ -760,7 +855,6 @@ $(function() {
   // })
 
   $('a.chat').click(function (e) {
-    $('#chat-wrapper').toggle();
     $('.new-message').remove();
     var chat_node = $('ul#chat')[0];
     if (chat_node.scrollHeight > 300) {
@@ -768,20 +862,25 @@ $(function() {
     }
   });
 
-  $('#chat-wrapper .close').click(function (e) {
-    $('#chat-wrapper').hide();
-  });
-
-  $('#sendMessage').submit(function (e) {
+  $('.sendMessage').submit(function (e) {
     e.preventDefault();
     var input = $(this).find('input');
     var message = input.val();
     var color = $side === 'b' ? 'black' : 'white';
-    var username = $('#username').val();
+    var chat;
+
+    if(color == 'white')
+    {
+      chat = $('ul.white#chat');
+    }
+    else
+    {
+      chat = $('ul.black#chat');
+    }
 
     if (!/^\W*$/.test(message)) {
       input.val('');
-      $('ul#chat').append('<li class="' + color + ' right" ><span class="username">' + escapeHTML(username) + '</span> ' + escapeHTML(message) + '</li>');
+      chat.append('<li class="' + color + ' right" >' + escapeHTML(message) + '</li>');
 
       var chat_node = $('ul#chat')[0];
       if (chat_node.scrollHeight > 300) {
@@ -791,8 +890,7 @@ $(function() {
       $socket.emit('send-message', {
         'message': message,
         'color': color,
-        'token': $token,
-        'username': username
+        'token': $token
       });
     }
   });

@@ -5,6 +5,7 @@ block head
     $token = '#{token}';
     $time = #{time};
     $increment = #{increment};
+    $session = '#{session}';
 
 block content
   div.bg#playBg
@@ -18,13 +19,7 @@ block content
   audio(id='messageSnd', preload='auto')
     source(src='/sounds/message.mp3')
 
-  #chat-wrapper
-    h4 Chat
-    ul#chat
-    input#username(type='text', placeholder='Nome de usuário')
-    span state your claim
-    form#sendMessage
-      input
+
   
   #captured-pieces
     ul.w
@@ -34,6 +29,18 @@ block content
     div.team_info#moves_left
       ul.clock
         li.white
+
+      .player_count.white
+        h4.white.cnt
+          span.count_players 0
+          span.count_players_phrase  players for white
+        ul.player_holder.white
+
+      .chat-wrapper
+        h4 chat for white team
+        ul.white#chat
+        form.white.sendMessage
+          input(placeholder='state your claim')
       
     #board_wrapper
       table.chess_board.white
@@ -250,6 +257,18 @@ block content
     div.team_info#moves
       ul.clock
         li.black
+
+      .player_count.black
+        h4.black.cnt
+          span.count_players 0
+          span.count_players_phrase  players for black
+        ul.player_holder.black
+
+      .chat-wrapper
+        h4.black chat for black team
+        ul.black#chat
+        form.black.sendMessage
+          input(placeholder='state your claim')
     
     span.promotion
       label(id='for_promotion') Promotion: 

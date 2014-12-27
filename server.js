@@ -36,11 +36,12 @@ app.get('/about', function(req, res) {
   res.render('about');
 });
 
-app.get('/play/:token/:time/:increment', function(req, res) {
+app.get('/play/:token/:time/:increment/:session', function(req, res) {
   res.render('play', {
     'token': req.params.token,
     'time': req.params.time,
-    'increment': req.params.increment
+    'increment': req.params.increment,
+    'session': req.params.session
   });
 });
 
@@ -117,7 +118,8 @@ io.sockets.on('connection', function (socket) {
       'currentColor' : "white",
       'timerStarted' : false,
       'name' : creatorName+"\'s room",
-      'token' : token.toString()
+      'token' : token.toString(),
+      'hasAdmin' : false
     };
 
     games[token].moves = [];
@@ -143,13 +145,6 @@ io.sockets.on('connection', function (socket) {
        sendObj['players'] = obj['players'].length;
 
        sendGames.push(sendObj);
-
-       /*for (var prop in obj) {
-          if(obj.hasOwnProperty(prop)){
-
-            console.log(prop + " = " + obj[prop]);
-          }
-       }*/
     }
 
     console.dir(sendGames);
@@ -167,8 +162,28 @@ io.sockets.on('connection', function (socket) {
       return;
     }
 
+    console.dir(data);
+
     //clearTimeout(games[data.token].timeout);
     game = games[data.token];
+
+    var admin = false;
+    var name = 'Guest'+Math.ceil(Math.random()*1000);
+
+    // Checka se é o criador da sala e
+    // TODO Dá autoridade de admin para ele
+    if(data.session == game.creator.id && game.hasAdmin === false)
+    {
+      games[data.token].hasAdmin = true;
+      admin = true;
+      name = game.creatorName;
+    }
+    else
+    {
+      console.log(data.session);
+      console.log("------");
+      console.log(game.creator.id);
+    }
 
     if (game.players.length >= 100) {
       socket.emit('full');
@@ -194,10 +209,18 @@ io.sockets.on('connection', function (socket) {
       'socket': socket,
       'color': color,
       'time': data.time,
-      'increment': data.increment
+      'increment': data.increment,
+      'name': name,
+      'admin': admin,
+      'lastMove': ''
     });
 
     game.creator.emit('ready', {});
+
+    // Send new player to all people.
+    io.sockets.in(data.token).emit('receive-players', { 
+      'players' : getCleanPlayers(data.token)
+    });
 
     socket.emit('joined', {
       'color': color,
@@ -205,6 +228,17 @@ io.sockets.on('connection', function (socket) {
     });
   });
   
+  function getCleanPlayers(token)
+  {
+    var cleanedPlayers = [];
+
+    games[token].players.forEach(function(player) {
+      cleanedPlayers.push({'id':player.socket.id, 'color':player.color, 'name':player.name, 'admin':player.admin, 'lastMove': player.lastMove });
+    });
+
+    return cleanedPlayers;  
+  }
+
   socket.on('game-over', function (data) {
     if (data.token in games) {
         if(games[data.token].moves.length > 0)
@@ -248,19 +282,15 @@ io.sockets.on('connection', function (socket) {
         games[data.token].moveVotes.forEach(function(move) {
           sanMoveVotes.push(move.san)
         });
-
-        console.log("SanMoveVotes = " + sanMoveVotes);
-
-        console.log("CountOccurences = " + countOccurences(data.move.san));
         
         data.count = countOccurences(data.move.san);
 
+        // TODO contar se esse voto é maioria de um time, e então fazer a jogada de uma vez. 
         function countOccurences(arr) {
           var count = 0;
 
           for(var i = 0; i < sanMoveVotes.length; i ++)
           {
-
             if(sanMoveVotes[i] == data.move.san)
             {
               console.log(sanMoveVotes[i] + " is equal to " + data.move.san);
@@ -269,6 +299,14 @@ io.sockets.on('connection', function (socket) {
           }
 
           return count;
+        }
+
+        for (var j in games[data.token].players) {
+          player = games[data.token].players[j];
+
+          if (player.socket === socket) {
+            games[data.token].players[j].lastMove = data.move.san;
+          }
         }
 
         io.sockets.in(data.token).emit('show-vote', data);
@@ -293,6 +331,10 @@ io.sockets.on('connection', function (socket) {
 
           opponent = game.players[Math.abs(j - 1)];
           if (opponent) {
+            opponent.socket.emit('receive-players', { 
+              'players' : getCleanPlayers(token)
+            });
+
             opponent.socket.emit('opponent-disconnected');
           }
           //clearInterval(games[token].interval);
@@ -303,6 +345,17 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('send-message', function (data) {
     if (data.token in games) {
+
+      var received = data;
+      received.username = "Unknown";
+
+      for (var j in games[data.token].players) {
+        if(socket.id == games[data.token].players[j].socket.id)
+        {
+          received.username = games[data.token].players[j].name;
+        }
+      }
+
       socket.broadcast.emit('receive-message', data);
     }
   });
@@ -321,13 +374,34 @@ io.sockets.on('connection', function (socket) {
   function startTimer(color, token, socket)
   {
     var game = games[token];
+
+    if (!(token in games)) {
+      socket.emit('token-invalid');
+      return;
+    }
+
+
+  
     var time_left;
 
     clearInterval(games[token].interval);
 
     if (token in games) {
       games[token].currentColor = color;
-      game.timeWhite = game.timeBlack = games[token].time = 10;
+      game.timeWhite = game.timeBlack = games[token].time = 7;
+
+      // Clean up last moves
+      for(var i =0; i < games[token].players.length; i++)
+      {
+        if( games[token].players[i].color == color )
+        {
+          games[token].players[i].lastMove = '';
+        }
+      }
+
+      io.sockets.in(token).emit('receive-players', { 
+        'players' : getCleanPlayers(token)
+      });
 
       games[token].interval = setInterval(function() {
         
@@ -353,6 +427,7 @@ io.sockets.on('connection', function (socket) {
         {
           // console.log("Interval end for " + color);
 
+          // Nesse caso existe pelo menos um voto de movimento
           if(games[token].moveVotes.length > 0)
           {
             var mostCommonMove;
@@ -382,6 +457,7 @@ io.sockets.on('connection', function (socket) {
             // Make most voted move
             makeMove(data, token);
           }
+          // Não existe voto, o computador vai fazer uma jogada aleatória
           else
           {
             var chess = new ch.Chess();
@@ -416,14 +492,13 @@ io.sockets.on('connection', function (socket) {
     if (data.token in games) {
       if(typeof data.move !== undefined)
       {
-        games[data.token].moves.push(data.move)
+        games[data.token].moves.push(data.move);
 
         // console.dir(games[data.token].moves);
-        
+
         io.sockets.in(token).emit('new-moves', {
             'moves': games[data.token].moves
         });
-      
       }
    
     }

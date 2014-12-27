@@ -14,15 +14,23 @@ $(function () {
 
     $('#room-list').empty();
 
-    for(var i=0; i<data.rooms.length; i++)
+    if(data.rooms.length === 0)
     {
-      var link = $URL + '/play/' + data.rooms[i].token + '/' + data.rooms[i].time + '/0'; 
-
-      if(i > 0)
+      $('#room-list').append("<span id='no_rooms'>no rooms found, try creating one!</span>");
+    }
+    else
+    {
+      for(var i=0; i<data.rooms.length; i++)
       {
-        $('#room-list').append("<span class='separator'></span>");
+        var link = $URL + '/play/' + data.rooms[i].token + '/' + data.rooms[i].time + '/0/0'; 
+
+        if(i > 0)
+        {
+          $('#room-list').append("<span class='separator'></span>");
+        }
+
+        $('#room-list').append("<a href='"+link+"'>"+ data.rooms[i].name + " - " + data.rooms[i].players + " playing</a>");
       }
-      $('#room-list').append("<a href='"+link+"'>"+ data.rooms[i].name + " - " + data.rooms[i].players + " playing</a>");
     }
   });
 
@@ -35,12 +43,12 @@ $(function () {
     $('#game_link').click(function() {
       $(this).select(); // when clicked, link is automatically selected for convenience
     });*/
-
-    document.location = $URL + '/play/' + $token + '/' + $time + '/' + $increment;
+    
+    document.location = $URL + '/play/' + $token + '/' + $time + '/' + $increment + '/' + $socket.socket.sessionid;
   });
 
   $socket.on('ready', function (data) {
-    document.location = $URL + '/play/' + $token + '/' + $time + '/' + $increment;
+    document.location = $URL + '/play/' + $token + '/' + $time + '/' + $increment + '/' + $socket.socket.sessionid;
   });
 
   $socket.on('token-expired', function (data) {
@@ -48,6 +56,11 @@ $(function () {
   });
 
 
+  $('#play, #create_form').submit(function (e) {
+    e.preventDefault();
+
+    $('#play').click();
+  });
 
   $('#play').click(function (ev) {
     var nickname = $('#nickname');
@@ -62,7 +75,7 @@ $(function () {
 
     $time = 10;
     $increment = 0;
-    
+
     $socket.emit('start', {
       'creatorName':$nickname
     });

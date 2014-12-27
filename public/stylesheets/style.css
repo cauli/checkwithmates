@@ -28,6 +28,13 @@ html {
   content: " ";
   display: table; }
 
+#no_rooms {
+  display: block;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 100px;
+  color: #aca59a; }
+
 input#nickname {
   width: 196px;
   height: 43px;
@@ -57,7 +64,7 @@ input#nickname.invalid {
   border-radius: 4px;
   background-color: #E5E3E3;
   margin-bottom: 60px;
-  overflow-y: scroll; }
+  overflow-y: auto; }
 
 #room-list .separator {
   display: block;
@@ -229,10 +236,10 @@ h3 {
   margin: 50px 0; }
 
 .last-origin {
-  background: #8cd8e4 !important; }
+  background: #c8eee4 !important; }
 
 .last-target {
-  background: #77d1df !important; }
+  background: #b5e8db !important; }
 
 .count {
   position: relative;
@@ -360,7 +367,7 @@ header {
     display: inline-block;
     line-height: 82px;
     height: 100%;
-    opacity: .9;
+    opacity: 1;
     position: absolute;
     left: 0; }
   .clock li.white {
@@ -373,7 +380,6 @@ header {
     background: #39393B; }
   .clock li.ticking {
     z-index: 1;
-    opacity: 1;
     /*-webkit-transform: scale(1.1);
     -moz-transform: scale(1.1);
     -o-transform: scale(1.1);
@@ -408,6 +414,22 @@ span#game-type {
   min-height: 600px;
   margin: 0px 0px 20px 0px;
   float: left; }
+
+.player_holder {
+  font-weight: 700;
+  color: #807979;
+  padding-top: 30px;
+  font-size: 16px; }
+  .player_holder li {
+    padding-left: 16px; }
+  .player_holder .lastMove {
+    font-style: italic;
+    font-family: 'Sorts Mill Goudy', serif;
+    margin-right: 10px;
+    float: right; }
+
+.player_holder.black {
+  color: white; }
 
 #form fieldset {
   border: 0;
@@ -577,59 +599,64 @@ footer {
   margin: 0px 0px 5px 0px;
   float: left; }
 
-/* Chat */
-#chat-wrapper {
+h4 {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.7rem;
+  height: 0;
+  line-height: 1em;
+  font-style: italic;
+  text-align: center;
+  color: #261e26;
+  padding-top: 14px; }
+
+h4.black {
+  color: white; }
+
+.player_count {
   display: block;
-  position: absolute;
-  width: 270px;
-  right: 10px;
-  top: 99px;
-  border: 4px solid #fff;
-  background: #e6e3e0; }
-  #chat-wrapper h4 {
-    font-family: 'Sorts Mill Goudy', serif;
-    font-size: 1.225rem;
-    height: 3em;
-    line-height: 3em;
-    margin: 5px 5%;
-    text-align: center;
-    color: #1F1F20; }
-  #chat-wrapper a.close {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: #1F1F20;
-    color: #fff;
-    font-size: 1.125rem;
-    padding: 0 7px;
-    text-decoration: none;
-    font-weight: 600;
-    margin: 1em 5%;
-    cursor: pointer; }
-    #chat-wrapper a.close:hover {
-      text-decoration: none;
-      background: #2c2c2d; }
-  #chat-wrapper > span {
+  position: relative;
+  width: auto;
+  right: 0;
+  height: 178px;
+  overflow-y: auto;
+  overflow-x: none;
+  margin-top: -12px; }
+
+.player_count.white {
+  background-color: white; }
+
+.player_count.black {
+  background-color: #39393B; }
+
+/* Chat */
+.chat-wrapper {
+  display: block;
+  position: relative;
+  width: auto;
+  right: 0;
+  height: 260px; }
+  .chat-wrapper > span {
     font-size: .9rem;
-    margin: 5px 5%;
     display: block; }
-  #chat-wrapper .username {
+  .chat-wrapper .username {
     font-weight: bold; }
 
 ul#chat {
   position: relative;
   top: 0;
-  max-height: 300px;
+  max-height: 188px;
   width: 100%;
-  overflow-y: scroll;
-  list-style-type: none; }
+  overflow-y: auto;
+  list-style-type: none;
+  margin-top: 12px; }
   ul#chat li {
     font-size: .9rem;
     padding: 10px;
     margin: 5px auto;
-    width: 90%;
-    border-radius: 5px;
-    position: relative; }
+    width: 85%;
+    border-radius: 4px 0 0 4px;
+    position: relative;
+    margin-left: 7px; }
     ul#chat li:before {
       position: absolute;
       content: '';
@@ -640,36 +667,48 @@ ul#chat {
   ul#chat li.white {
     background: #fff;
     color: #444; }
+  ul#chat li.left {
+    border-radius: 0 4px 4px 0;
+    margin-left: 25px; }
   ul#chat li.left:before {
     left: 0;
-    margin-left: -7px;
-    border-bottom: 7px solid transparent;
-    border-top: 7px solid transparent; }
+    margin-left: -20px;
+    border-bottom: 20px solid transparent;
+    border-top: 20px solid transparent; }
   ul#chat li.black.left:before {
-    border-right: 7px solid #424242; }
+    border-right: 20px solid #424242;
+    top: 0;
+    margin-left: -20px; }
   ul#chat li.white.left:before {
-    border-right: 7px solid #fff; }
+    border-right: 20px solid #fff;
+    top: 0;
+    margin-left: -20px; }
   ul#chat li.right:before {
     right: 0;
-    margin-right: -7px;
-    border-bottom: 7px solid transparent;
-    border-top: 7px solid transparent; }
+    margin-right: -20px;
+    border-bottom: 20px solid transparent;
+    border-top: 20px solid transparent; }
   ul#chat li.black.right:before {
-    border-left: 7px solid #424242; }
+    border-left: 20px solid #424242;
+    top: 0; }
   ul#chat li.white.right:before {
-    border-left: 7px solid #fff; }
+    border-left: 20px solid #fff;
+    top: 0; }
 
-#sendMessage input {
+.sendMessage input {
   width: 100%;
-  padding: 15px 10px;
+  padding: 15px 9px;
   border: none;
   outline: none;
   font-size: .9rem;
-  border: 4px solid #e6e3e0; }
-#sendMessage input.black {
+  text-indent: 10px;
+  bottom: 0;
+  position: absolute;
+  width: 100%; }
+.sendMessage input.black {
   background: #444;
   color: #fff; }
-#sendMessage input.white {
+.sendMessage input.white {
   background: #fff;
   color: #444; }
 
@@ -834,7 +873,7 @@ span.promotion {
     width: 90px;
     margin: 0 5px; } }
 @media only screen and (min-width: 1400px) {
-  #chat-wrapper {
+  .chat-wrapper {
     display: block; } }
 @media only screen and (max-width: 999px) {
   #captured-pieces {
