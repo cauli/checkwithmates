@@ -83,12 +83,9 @@ var io = require('socket.io').listen(server, {log: false});
 if (process.env.PORT) {
   io.configure(function () { 
     io.set("transports", ["xhr-polling"]); 
-    io.set("polling duration", 10); 
+    io.set("polling duration", 15); 
   });
 }
-
-
-
 
 io.sockets.on('connection', function (socket) {
   
@@ -213,7 +210,6 @@ io.sockets.on('connection', function (socket) {
       }
       winston.log('info', 'Number of currently running games', { '#': Object.keys(games).length });
     } else {
-
       var blackPlayers = _.where(games[data.token].players, { 'color': 'black' } );
       var whitePlayers = _.where(games[data.token].players, { 'color': 'white' } );
 
@@ -225,10 +221,6 @@ io.sockets.on('connection', function (socket) {
       {
         color = 'white';
       }
-
-     // var colors = ['black', 'white'];
-
-     // color = colors[Math.floor(Math.random() * 2)];
     }
 
     //join room
