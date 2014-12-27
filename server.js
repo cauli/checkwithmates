@@ -154,6 +154,29 @@ io.sockets.on('connection', function (socket) {
     })
   });
 
+  socket.on('name-change', function (data) {
+    if (!(data.token in games)) 
+    {
+      socket.emit('token-invalid');
+      return;
+    }
+
+    for (var j in games[data.token].players) 
+    {
+      player = games[data.token].players[j];
+
+      if (player.socket === socket) {
+        games[data.token].players[j].name = cleanInput(data.name);
+      }
+    }
+
+    // Send new player to all people.
+    io.sockets.in(data.token).emit('receive-players', { 
+      'players' : getCleanPlayers(data.token)
+    });
+  });
+
+
   socket.on('join', function (data) {
     var game, color, time = data.time;
 
@@ -178,12 +201,6 @@ io.sockets.on('connection', function (socket) {
       admin = true;
       name = game.creatorName;
     }
-    else
-    {
-      console.log(data.session);
-      console.log("------");
-      console.log(game.creator.id);
-    }
 
     if (game.players.length >= 100) {
       socket.emit('full');
@@ -196,9 +213,22 @@ io.sockets.on('connection', function (socket) {
       }
       winston.log('info', 'Number of currently running games', { '#': Object.keys(games).length });
     } else {
-      var colors = ['black', 'white'];
 
-      color = colors[Math.floor(Math.random() * 2)];
+      var blackPlayers = _.where(games[data.token].players, { 'color': 'black' } );
+      var whitePlayers = _.where(games[data.token].players, { 'color': 'white' } );
+
+      if(blackPlayers.length <= whitePlayers.length)
+      {
+        color = 'black';
+      }
+      else
+      {
+        color = 'white';
+      }
+
+     // var colors = ['black', 'white'];
+
+     // color = colors[Math.floor(Math.random() * 2)];
     }
 
     //join room
@@ -343,11 +373,20 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  function cleanInput(input)
+  {
+    return input.replace(/(<([^>]+)>)/ig,"");
+  }
+
   socket.on('send-message', function (data) {
     if (data.token in games) {
 
       var received = data;
+
       received.username = "Unknown";
+
+      received.color = cleanInput(data.color);
+      received.message = cleanInput(data.message);
 
       for (var j in games[data.token].players) {
         if(socket.id == games[data.token].players[j].socket.id)
@@ -356,7 +395,7 @@ io.sockets.on('connection', function (socket) {
         }
       }
 
-      socket.broadcast.emit('receive-message', data);
+      socket.broadcast.emit('receive-message', received);
     }
   });
 
@@ -494,7 +533,7 @@ io.sockets.on('connection', function (socket) {
       {
         games[data.token].moves.push(data.move);
 
-        // console.dir(games[data.token].moves);
+        console.dir(games[data.token].moves);
 
         io.sockets.in(token).emit('new-moves', {
             'moves': games[data.token].moves
@@ -503,9 +542,6 @@ io.sockets.on('connection', function (socket) {
    
     }
   }
-
-
-
 });
 
 

@@ -27,10 +27,31 @@ $(function() {
     }
   }
 
+  function nicknameKeydownHandler(e) {
+    if (e.which === 13) {
+      hideNickname();
+
+      e.data.accept($('#nickname-inside').val());
+    } else if (e.which === 27) {
+      hideNickname();
+    }
+  }
+
   function showModal(message) {
     $('#modal-message').text(message);
     $('#modal-mask').fadeIn(200);
     $(document).on('keydown', modalKeydownHandler);
+  }
+
+  function showNickname(message, options) {
+    $('#nickname-message').text(message);
+    $('#nickname-mask').fadeIn(200);
+    $(document).on('keydown', options, nicknameKeydownHandler);
+  }
+
+  function hideNickname() {
+    $('#nickname-mask').fadeOut(200);
+    $(document).off('keydown', nicknameKeydownHandler);
   }
 
   function hideModal() {
@@ -329,7 +350,8 @@ $(function() {
     if (color === 'b') {
       // this is a vote for a white move
       pieces = {  
-        'p': '&#9823',
+        'k': '&#9818;',
+        'p': '&#9823;',
         'q': '&#9819;',
         'r': '&#9820;',
         'n': '&#9822;',
@@ -340,7 +362,8 @@ $(function() {
     } else {
       // this is a vote for a black move
       pieces = {
-        'p': '&#9817',
+        'k': '&#9812;',
+        'p': '&#9817;',
         'q': '&#9813;',
         'r': '&#9814;',
         'n': '&#9816;',
@@ -356,18 +379,22 @@ $(function() {
 
     if(square.length === 0)
     {
-      console.log("Sq len 0");
+     // console.log("Sq len 0");
 
-
-      slot.append('<span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san + '</span></span><a draggable="false">'+pieces[piece]+'</a>');
+      // Try to avoid ugly undefined bug
+      if(typeof pieces[piece] !== undefined)
+      {
+         slot.append('<span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san + '</span></span><a draggable="false">'+pieces[piece]+'</a>');
+      }
+     
       square = slot.find('a');
     }
     else
     {
-      console.log("Sq len > 0");
+  //    console.log("Sq len > 0");
       if(slot.find('.count').length === 0)
       {
-        console.log("Sq count === 0");
+      //  console.log("Sq count === 0");
         slot.prepend('<span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san + '</span></span>')
       }
       else
@@ -375,8 +402,6 @@ $(function() {
         slot.find('.count').text(data.count);
         slot.find('.san').text(data.move.san);
       }
-
-  
     }
 
     square.css('opacity', 0.25);
@@ -612,6 +637,8 @@ $(function() {
       {
         var admin = false;
         var adminTag = "";
+        var meTag = "";
+        var you = false;
 
         if(array[i].admin === true)
         {
@@ -619,9 +646,47 @@ $(function() {
           adminTag = "@";
         }
 
-        ul.append('<li>'+array[i].name+' '+adminTag+'<span class="lastMove">'+array[i].lastMove+'</span></li>')
+        if($socket.socket.sessionid == array[i].id)
+        {
+          you = true;
+          meTag = "(you)";
+        }
+
+        if(you)
+        {
+          ul.append('<a class="profile"><li>'+array[i].name+' '+adminTag+' '+meTag+'</a><span class="lastMove">'+array[i].lastMove+'</span></li>')
+        }
+        else
+        {
+          ul.append('<li>'+array[i].name+' '+adminTag+' '+meTag+'<span class="lastMove">'+array[i].lastMove+'</span></li>')
+        }
+
+        $('.profile').click(function(e) {
+          e.preventDefault();
+
+          showNickname('Change your nickname to:', {
+            accept: triggerNameChange
+          });
+        })
       }
     }
+  }
+
+  function triggerNameChange(name)
+  {
+    console.log("Triggering name change to " + name);
+    if(name.length > 1 && name.length < 15)
+    {
+      $socket.emit('name-change', {
+        'token': $token,
+        'name' : escapeHTML(name)
+      })
+    }
+    else
+    {
+      console.error('Invalid name.');
+    }
+    
   }
 
   $socket.on('full', function (data) {
@@ -705,7 +770,7 @@ $(function() {
     $gameOver = false;
 
     $('.clock li').each(function () {
-      $(this).text($time + 's');
+      $(this).text('0:00');
     });
 
     if ($('.clock li.black').hasClass('ticking')) {
@@ -744,7 +809,7 @@ $(function() {
   /* gameplay */
 
   $('.clock li').each(function() {
-    $(this).text($time+'s');
+    $(this).text('0:00');
   });
   
   // $('#game-type').text($time + '|' + $increment);
@@ -820,6 +885,17 @@ $(function() {
     hideModal();
   });
 
+  $('#nickname-mask, #nickname-cancel').click(function (e) {
+    e.preventDefault();
+    hideNickname();
+  });
+
+  $('#nickname-ok').click(function(e) {
+    var name = $('#nickname-inside').val();
+    triggerNameChange(name);
+    hideNickname();
+  });
+
   // $('#offer-accept').click(function (e) {
   //   e.preventDefault();
   //   hideOffer();
@@ -832,7 +908,7 @@ $(function() {
   //   rematchDeclined();
   // });
 
-  $('#modal-window, #offer-window').click(function (e) {
+  $('#modal-window, #offer-window, #nickname-window').click(function (e) {
     e.stopPropagation();
   });
 

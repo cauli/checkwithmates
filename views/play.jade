@@ -11,7 +11,8 @@ block content
   div.bg#playBg
 
   header.clearfix
-    img(src="/images/logo_header.png")#logo_header
+    a(href='/')
+      img(src="/images/logo_header.png")#logo_header
 
   audio(id='moveSnd', preload='auto')
     source(src='/sounds/move.mp3')
@@ -20,7 +21,6 @@ block content
     source(src='/sounds/message.mp3')
 
 
-  
   #captured-pieces
     ul.w
     ul.b   

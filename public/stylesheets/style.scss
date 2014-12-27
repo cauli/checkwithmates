@@ -27,7 +27,7 @@ $arrow-size: 20px;
   box-sizing: border-box;
 }
 
-html { font-size: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+html { font-family:'Open sans', Arial, sans-serif; font-size: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
 
 ::-moz-selection { background: darken($dark-purple, 10%); color: #fefefe; text-shadow: none; }
 ::selection { background: darken($dark-purple, 10%); color: #fefefe; text-shadow: none; }
@@ -36,6 +36,11 @@ html { font-size: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; -we
 .clearfix:after {
     content: " ";
     display: table;
+}
+
+#profile
+{
+  cursor:pointer;
 }
 
 #no_rooms {
@@ -62,7 +67,26 @@ input#nickname
   font-size:13px;
 }
 
-input#nickname:focus
+input#nickname-inside
+{
+  width:196px;
+  height:43px;
+  background-color:white;
+  transition:0.3s;
+  color:$dark-purple;
+  display:block;
+  border-radius:4px;
+  outline: none;
+  border:$green 2px solid;
+  text-indent:20px;
+  font-weight:600;
+  font-size:13px;
+  margin: 0 auto;
+  margin-top: -36px;
+
+}
+
+input#nickname:focus, input#nickname-inside:focus
 {
   display:block;
   border:$green 4px solid;
@@ -98,7 +122,7 @@ input#nickname.invalid
 
 #room-list a
 {
-  font-family:'Open sans', sans-serif;
+  font-family:'Open sans', Arial, sans-serif;
   color:$dark-grey;
   font-size:20px;
   text-align:center;
@@ -321,7 +345,7 @@ h3 {
   font-weight:bolder;
 }
 
-#modal-mask, #offer-mask{
+#modal-mask, #offer-mask, #nickname-mask{
   display: none;
   cursor: pointer;
   position: fixed;
@@ -341,7 +365,7 @@ h3 {
   }
 }
 
-#modal-window, #offer-window{
+#modal-window, #offer-window, #nickname-window{
   width: 420px;
   height: 180px;
   position: fixed;
@@ -383,6 +407,19 @@ h3 {
     right: 4em;
   }
   #offer-decline{
+    left: 4em;
+  }
+}
+
+#nickname-window{
+  .button{
+    position: absolute;
+    bottom: 1em;
+  }
+  #nickname-ok{
+    right: 4em;
+  }
+  #nickname-cancel{
     left: 4em;
   }
 }
@@ -600,30 +637,39 @@ input, button{
 }
 
 .button {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  outline-style:none;/*IE*/
+  display:block;
+  transition:0.3s;
+  color:white;
+  font-family: 'Sorts Mill Goudy', serif;
+  font-style:italic;
+  position:relative;
+  background-color:$green;
+  border-radius: 4px;
+  font-size:18px;
+  line-height:46px;
+  text-align:center;
+  cursor:pointer;
   width: 15%;
-  height: 50px;
-  display: block;
-  font-size: 1.125rem;
-  border-radius: 2px;
-  border: 0;
-  border-bottom: 2px solid darken($blue, 5%);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  background: $blue;
+  height: 43px;
   color: white;
   cursor: pointer;
   float: right;
-  box-shadow: inset 0 -2px darken($blue, 5%);
   position: relative;
 }
 
 .button:hover{
-  background: lighten($blue, 5%);
-  border-bottom: 2px solid darken($blue, 2%);
-  box-shadow: inset 0 -2px darken($blue, 2%);
+  background: lighten($green, 5%);
   @include all-transition;
 }
 .button:active{
-  top: 1px;
+  top: -1px;
 }
 
 a.button{
@@ -642,14 +688,10 @@ a.button:hover{
 
 .button--red{
   background: $red;
-  border-color: darken($red, 5%);
-  box-shadow: inset 0 -2px darken($red, 5%);
   margin-right: 10px;
 
   &:hover{
     background: lighten($red, 5%);
-    border-bottom: 2px solid darken($red, 2%);
-    box-shadow: inset 0 -2px darken($red, 2%);
     @include all-transition;
   }
 }
@@ -660,11 +702,12 @@ a.button:hover{
 
 p#waiting {
   font-family: 'Sorts Mill Goudy', serif;
-  font-size: 1.275rem;
-  color: darken($red, 5%);
+  font-style:italic;
+  font-size: 1.175rem;
+  color: darken($green, 5%);
   width: 100%;
   text-align: center;
-  margin: 15px 0px 0px 0px;
+  margin: 10px 0px 0px 0px;
   display: none;
   float: left;
 }
