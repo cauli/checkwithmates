@@ -7,7 +7,7 @@ $(function () {
   var $WS;
 
   if (ENV === 'production') {
-    $URL = 'https://checkwithmates.com';
+    $URL = 'http://checkwithmates.com';
     $WS = $URL;
   }
   else if(ENV == 'development') {
