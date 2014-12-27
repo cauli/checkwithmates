@@ -8,6 +8,17 @@ $(function() {
   var $gameOver = false;
   var $chessboardWhite = $('.chess_board.white').clone();
   var $chessboardBlack = $('.chess_board.black').clone();
+  var $name = "";
+
+  var randomPhrases = [ "state your claim",
+                          "we will never resign",
+                          "Karpov would be proud",
+                          "how to en passant?",
+                          "genius!",
+                          "my team rules",
+                          "KP is just lame",
+                          "Carlsen would cringe on that"
+                        ]
 
   function modalKeydownHandler(e) {
     e.preventDefault();
@@ -105,7 +116,7 @@ $(function() {
 
       if(!rcvd)
       {
-        piece.css('opacity', 0.5);
+        piece.addClass('votePiece');
       }
 
       var moveSnd = $("#moveSnd")[0];
@@ -339,12 +350,7 @@ $(function() {
 
   $socket.on('show-vote', function(data) {
     var pieces = {}
-    
-    console.log("Showing vote " + data.move.color + " " + data.move);
-    console.dir(data.move);
-    
     var color = data.move.color;
-
     var colorClass;
 
     if (color === 'b') {
@@ -375,36 +381,36 @@ $(function() {
 
     var slot = $('td.' + data.move.to.toUpperCase());
     var square = slot.find('a');
-    var piece = data.move.piece;
+    var pieceToPut = data.move.piece;
 
-    if(square.length === 0)
+    if(square.length === 0 || slot.find('.count').length === 0)
     {
-     // console.log("Sq len 0");
-
-      // Try to avoid ugly undefined bug
-      if(typeof pieces[piece] !== undefined)
-      {
-         slot.append('<span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san + '</span></span><a draggable="false">'+pieces[piece]+'</a>');
-      }
-     
-      square = slot.find('a');
+      // This square doesn't have a piece yet or any notifications
+      slot.append('<div class="vote"><a draggable="false" class="votePiece">'+pieces[pieceToPut]+'</a><div class="notification"><span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san.replace(/\#/gi, '') + '</span></span></div></div>');
     }
     else
     {
-  //    console.log("Sq len > 0");
-      if(slot.find('.count').length === 0)
+      var sanMovesInThisSlot = [];
+
+      var found = false;
+
+      slot.find(".notification").each(function( index ) {
+        if($(this).find('.san').text() == data.move.san.replace(/\#/gi, ''))
+        {
+          found = true;
+          $(this).find('.count').html(data.count + " <span class='san'>" + data.move.san.replace(/\#/gi, '') + "</span>");
+        }
+      });
+
+      // This vote does not exist in the notifications, create new one.
+      if(found == false)
       {
-      //  console.log("Sq count === 0");
-        slot.prepend('<span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san + '</span></span>')
-      }
-      else
-      {
-        slot.find('.count').text(data.count);
-        slot.find('.san').text(data.move.san);
+        slot.find('.votePiece').last().after('<a draggable="false" class="votePiece multiple">'+pieces[pieceToPut]+'</a>');
+        slot.find('.vote').append('<div class="notification"><span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san.replace(/\#/gi, '') + '</span></span></div>')
       }
     }
 
-    square.css('opacity', 0.25);
+    //square.css('opacity', 0.25);
       
     // var promotion = data.move.promotion;
   });
@@ -459,13 +465,7 @@ $(function() {
       $('.black#chat').css('max-height','237px');
     }
 
-    var randomPhrases = [ "state your claim",
-                          "we will never resign",
-                          "Karpov would be proud",
-                          "how to en passant?",
-                          "genius!",
-                          data.moves.length + " moves already?" 
-                        ]
+    
 
 
     $('.sendMessage').find('input').addClass($side === 'b' ? 'black' : 'white');
@@ -523,8 +523,9 @@ $(function() {
 
     if(typeof data.move !== undefined && data !== null)
     {
-      console.log('I just received move');
-      console.dir(data);
+      // Remove all votes from screen
+      $('.vote').remove();
+      $('.votePiece').removeClass('votePiece');
 
       movePiece(from=data.move.from, to=data.move.to, promotion=data.move.promotion, rcvd=true);
 
@@ -533,9 +534,8 @@ $(function() {
         var title = $('title').text();
         countHiddenMoves++;
 
-        console.log(title);
         var titlePlusCount = title.replace(/\(\d\)/g, "(" + countHiddenMoves + ")");
-        console.log(titlePlusCount);
+
         $('title').text(titlePlusCount);
 
         $(window).on('focus', removeHiddenCount);
@@ -595,9 +595,6 @@ $(function() {
 
   function drawPlayers(players)
   {
-    console.log("Received players");
-    console.dir(players);
-
     var blackPlayers = _.where(players, { 'color': 'black' } );
     var whitePlayers = _.where(players, { 'color': 'white' } );
 
@@ -650,6 +647,7 @@ $(function() {
         {
           you = true;
           meTag = "(you)";
+          $name = array[i].name;
         }
 
         if(you)
@@ -707,9 +705,8 @@ $(function() {
       chat = $('ul.black#chat');
     }
 
-    var chat_node = $('ul#chat')[0];
+    var chat_node = chat[0];
     var messageSnd = $("#messageSnd")[0];
-
 
 
     chat.append('<li class="' + data.color + ' left" ><span class="username">' + escapeHTML(data.username) + '</span> ' + escapeHTML(data.message) + '</li>');
@@ -956,18 +953,22 @@ $(function() {
 
     if (!/^\W*$/.test(message)) {
       input.val('');
-      chat.append('<li class="' + color + ' right" >' + escapeHTML(message) + '</li>');
+      chat.append('<li class="' + color + ' right" ><span class="username">' + escapeHTML($name) + '</span> ' + escapeHTML(message) + '</li>');
 
-      var chat_node = $('ul#chat')[0];
+      var chat_node = chat[0];
       if (chat_node.scrollHeight > 300) {
         setTimeout(function() { chat_node.scrollTop = chat_node.scrollHeight; }, 50);
       }
+
 
       $socket.emit('send-message', {
         'message': message,
         'color': color,
         'token': $token
       });
+
+      $('.sendMessage').find('input').attr('placeholder', randomPhrases[Math.floor(Math.random() * randomPhrases.length)])
+      
     }
   });
 

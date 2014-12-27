@@ -158,6 +158,14 @@ input#nickname.invalid {
   height: 100%;
   z-index: -1; }
 
+.notification {
+  position: relative;
+  height: 20px; }
+
+.votePiece {
+  opacity: 0.25;
+  position: absolute; }
+
 #loginBg {
   background: #3d3e42;
   background: -moz-linear-gradient(-45deg, #3d3e42 0%, #444249 100%);
@@ -883,6 +891,9 @@ span.promotion {
 
 .chess_board td.selected {
   background: #ef9e9c !important; }
+
+.profile {
+  cursor: pointer; }
 
 /* Media queries */
 @media only screen and (min-width: 760px) and (max-width: 900px) {

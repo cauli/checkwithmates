@@ -7,7 +7,7 @@ $(function () {
   var $WS;
 
   if (ENV === 'production') {
-    $URL = 'https://checkwithmates.herokuapp.com';
+    $URL = 'https://checkwithmates.com';
     $WS = $URL;
   }
   else if(ENV == 'development') {

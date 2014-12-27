@@ -427,7 +427,7 @@ io.sockets.on('connection', function (socket) {
 
     if (token in games) {
       games[token].currentColor = color;
-      game.timeWhite = game.timeBlack = games[token].time = 7;
+      game.timeWhite = game.timeBlack = games[token].time = 50;
 
       // Clean up last moves
       for(var i =0; i < games[token].players.length; i++)
@@ -535,8 +535,12 @@ io.sockets.on('connection', function (socket) {
 
         console.dir(games[data.token].moves);
 
-        io.sockets.in(token).emit('new-moves', {
+        /*io.sockets.in(token).emit('new-moves', {
             'moves': games[data.token].moves
+        });*/
+
+        io.sockets.in(token).emit('move', {
+            'move': data.move
         });
       }
    

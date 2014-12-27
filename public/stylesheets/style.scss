@@ -196,6 +196,23 @@ input#nickname.invalid
   height:100%;
   z-index:-1;
 }
+
+.notification
+{
+  position:relative;
+  height:20px;
+}
+
+.votePiece
+{
+  opacity:0.25;
+  position: absolute;
+}
+.votePiece.multiple
+{
+
+}
+
 #loginBg
 {
 
@@ -1071,6 +1088,11 @@ span.promotion{
 }
 .chess_board td.selected {
   background: lighten($red, 30%) !important;
+}
+
+.profile
+{
+  cursor:pointer;
 }
 
 /* Media queries */
