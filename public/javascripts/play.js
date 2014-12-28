@@ -718,7 +718,7 @@ $(function() {
     var messageSnd = $("#messageSnd")[0];
 
 
-    chat.append('<li class="' + data.color + ' left" ><span class="username">' + escapeHTML(data.username) + '</span> ' + escapeHTML(data.message) + '</li>');
+    chat.append('<li class="' + data.color + ' left" ><span class="username">' + escapeHTML(data.username) + '</span> <span class="textChat">' + escapeHTML(data.message) + '</span></li>');
 
     if (chat.is(':visible') && chat_node.scrollHeight > 300) {
       setTimeout(function() { chat_node.scrollTop = chat_node.scrollHeight; }, 50);
@@ -962,7 +962,7 @@ $(function() {
 
     if (!/^\W*$/.test(message)) {
       input.val('');
-      chat.append('<li class="' + color + ' right" ><span class="username">' + escapeHTML($name) + '</span> ' + escapeHTML(message) + '</li>');
+      chat.append('<li class="' + color + ' right" ><span class="username">' + escapeHTML($name) + '</span> <span class="textChat">' + escapeHTML(message) + '</span></li>');
 
       var chat_node = chat[0];
       if (chat_node.scrollHeight > 300) {
