@@ -419,7 +419,7 @@ io.sockets.on('connection', function (socket) {
 
     if (token in games) {
       games[token].currentColor = color;
-      game.timeWhite = game.timeBlack = games[token].time = 50;
+      game.timeWhite = game.timeBlack = games[token].time = 6;
 
       // Clean up last moves
       for(var i =0; i < games[token].players.length; i++)
