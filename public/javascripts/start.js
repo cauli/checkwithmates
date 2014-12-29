@@ -14,7 +14,7 @@ $(function () {
 
   setInterval(function() {
     $socket.emit('ask-for-rooms');
-  }, 6000);
+  }, 4000);
  
   $socket.on('rooms', function (data) {
     console.log("Got rooms!")
@@ -38,7 +38,7 @@ $(function () {
           $('#room-list').append("<span class='separator'></span>");
         }
 
-        $('#room-list').append("<a href='"+link+"'>"+ data.rooms[i].name + " - " + data.rooms[i].players + " playing</a>");
+        $('#room-list').append("<a href='"+link+"'>"+ data.rooms[i].name + " - " + data.rooms[i].whitePlayers + "vs"+ data.rooms[i].blackPlayers+"</a>");
       }
     }
   });

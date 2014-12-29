@@ -98,10 +98,20 @@ io.sockets.on('connection', function (socket) {
 
     //token is valid for 20 minutes
     var timeout = setTimeout(function () {
-      if (games[token].players.length === 0) {
-        delete games[token];
-        socket.emit('token-expired');
+      if (!(token in games)) 
+      {
+        socket.emit('token-invalid');
+        return;
       }
+      else
+      {
+        if (games[token].players.length === 0) {
+          delete games[token];
+          socket.emit('token-invalid');
+        }
+      }
+
+      
     }, 20 * 60 * 1000);
 
     games[token] = {
@@ -112,11 +122,14 @@ io.sockets.on('connection', function (socket) {
       'interval': null,
       'timeout': timeout,
       'moveVotes': [],
+      'whitelistedMoveVotes': [],
       'currentColor' : "white",
       'timerStarted' : false,
       'name' : creatorName+"\'s room",
       'token' : token.toString(),
-      'hasAdmin' : false
+      'hasAdmin' : false,
+      'whitePlayers' : 0,
+      'blackPlayers' : 0
     };
 
     games[token].moves = [];
@@ -139,6 +152,8 @@ io.sockets.on('connection', function (socket) {
        sendObj['name'] = obj['name'];
        sendObj['time'] = obj['time'];
        sendObj['token'] = obj['token'];
+       sendObj['blackPlayers'] = obj['blackPlayers'];
+       sendObj['whitePlayers'] = obj['whitePlayers'];
        sendObj['players'] = obj['players'].length;
 
        sendGames.push(sendObj);
@@ -203,6 +218,8 @@ io.sockets.on('connection', function (socket) {
       socket.emit('full');
       return;
     } else if (game.players.length === 1) {
+      io.sockets.in(data.token).emit('ready', {});
+
       if (game.players[0].color === 'black') {
         color = 'white';
       } else {
@@ -234,10 +251,14 @@ io.sockets.on('connection', function (socket) {
       'increment': data.increment,
       'name': name,
       'admin': admin,
-      'lastMove': ''
+      'lastMove': '',
+      'won': 0
     });
 
-    game.creator.emit('ready', {});
+    games[data.token].blackPlayers = _.where(games[data.token].players, { 'color': 'black' } ).length;
+    games[data.token].whitePlayers = _.where(games[data.token].players, { 'color': 'white' } ).length;
+
+   
 
     // Send new player to all people.
     io.sockets.in(data.token).emit('receive-players', { 
@@ -245,8 +266,15 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.emit('joined', {
+      'playerCount' : games[data.token].players.length,
       'color': color,
       'moves': games[data.token].moves
+    });
+
+    // Send current move votes to the new player
+    games[data.token].moveVotes.forEach(function(move) {
+      var count = countOccurences(move.san, data.token)
+      socket.emit('show-vote', {'count': count, 'move':move});
     });
   });
   
@@ -255,7 +283,7 @@ io.sockets.on('connection', function (socket) {
     var cleanedPlayers = [];
 
     games[token].players.forEach(function(player) {
-      cleanedPlayers.push({'id':player.socket.id, 'color':player.color, 'name':player.name, 'admin':player.admin, 'lastMove': player.lastMove });
+      cleanedPlayers.push({'id':player.socket.id, 'color':player.color, 'name':player.name, 'admin':player.admin, 'lastMove': player.lastMove, 'won': player.won });
     });
 
     return cleanedPlayers;  
@@ -285,8 +313,47 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  function checkMoveValid(token, san)
+  {
+    // Avoid slow calculations
+    if(_.contains(games[token].whitelistedMoveVotes, san))
+    {
+      return true;
+    }
+
+    var chess = new ch.Chess();
+
+    for(var i=0; i<games[token].moves.length; i++)
+    {
+      chess.move(games[token].moves[i].san);
+    }
+
+    if(chess.move(san) === null)
+    {
+      console.log("Invalid san move tried, not voted.");
+      return false;
+    }
+
+    var validation = chess.validate_fen(chess.fen());
+
+    if(validation.valid === false)
+    {
+      console.log("Validation error: " + validation.error);
+      return false;
+    }
+
+    games[token].whitelistedMoveVotes.push(san);
+
+    return true;
+  }
+
   socket.on('new-vote', function (data) {
     if (data.token in games) {
+      if(data.move === null)
+      {
+        socket.emit('invalid-move');
+      }
+
       var fullColor = data.move.color === 'w' ? 'white' : 'black';
 
       if(fullColor != games[data.token].currentColor)
@@ -295,46 +362,74 @@ io.sockets.on('connection', function (socket) {
       }
       else
       {
-        console.log("Showing vote for the masses.");
-        games[data.token].moveVotes.push(data.move);
-
-        var sanMoveVotes = [];
+        // Check in chess if this move can actually be made on the current game or else it can be faked via client-side   
+        if(!checkMoveValid(data.token, data.move.san))
+        {
+          socket.emit('invalid-move');
+        }
+        else
+        {
+          games[data.token].moveVotes.push(data.move);
         
-        // Makes a "san" copy of the moves stored
-        games[data.token].moveVotes.forEach(function(move) {
-          sanMoveVotes.push(move.san)
-        });
-        
-        data.count = countOccurences(data.move.san);
+          data.count = countOccurences(data.move.san, data.token);
 
-        // TODO contar se esse voto é maioria de um time, e então fazer a jogada de uma vez. 
-        function countOccurences(arr) {
-          var count = 0;
+          // TODO Cache this count on the game object. 
+          var playerCount;
 
-          for(var i = 0; i < sanMoveVotes.length; i ++)
+          if(fullColor == 'white')
           {
-            if(sanMoveVotes[i] == data.move.san)
-            {
-              console.log(sanMoveVotes[i] + " is equal to " + data.move.san);
-              count++;
+            playerCount = games[data.token].whitePlayers;
+          }
+          else
+          {
+            playerCount = games[data.token].blackPlayers;
+          }
+
+          for (var j in games[data.token].players) {
+            player = games[data.token].players[j];
+
+            if (player.socket === socket) {
+              games[data.token].players[j].lastMove = data.move.san;
             }
           }
 
-          return count;
-        }
+          // Showing votes for everyone
+          io.sockets.in(data.token).emit('show-vote', data);
 
-        for (var j in games[data.token].players) {
-          player = games[data.token].players[j];
-
-          if (player.socket === socket) {
-            games[data.token].players[j].lastMove = data.move.san;
+          if(data.count > playerCount/2)
+          {
+            calculateVotesAndMakeMove(data.token, fullColor, socket );
           }
         }
 
-        io.sockets.in(data.token).emit('show-vote', data);
+
+
+        
       }
     }
   });
+
+  function countOccurences(san, token) {
+    var sanMoveVotes = [];
+  
+    // Makes a "san" copy of the moves stored
+    games[token].moveVotes.forEach(function(move) {
+      sanMoveVotes.push(move.san)
+    });
+
+    var count = 0;
+
+    for(var i = 0; i < sanMoveVotes.length; i ++)
+    {
+      if(sanMoveVotes[i] == san)
+      {
+        console.log(sanMoveVotes[i] + " is equal to " + san);
+        count++;
+      }
+    }
+
+    return count;
+  }
 
   socket.on('disconnect', function (data) {
     console.log('Player disconnected');
@@ -350,6 +445,9 @@ io.sockets.on('connection', function (socket) {
 
           // remove from the players array of the game
           games[token].players.splice(j, 1);
+
+          games[token].blackPlayers = _.where(games[data.token].players, { 'color': 'black' } ).length;
+          games[token].whitePlayers = _.where(games[data.token].players, { 'color': 'white' } ).length;
 
           opponent = game.players[Math.abs(j - 1)];
           if (opponent) {
@@ -410,8 +508,6 @@ io.sockets.on('connection', function (socket) {
       socket.emit('token-invalid');
       return;
     }
-
-
   
     var time_left;
 
@@ -419,7 +515,7 @@ io.sockets.on('connection', function (socket) {
 
     if (token in games) {
       games[token].currentColor = color;
-      game.timeWhite = game.timeBlack = games[token].time = 6;
+      game.timeWhite = game.timeBlack = games[token].time = 10;
 
       // Clean up last moves
       for(var i =0; i < games[token].players.length; i++)
@@ -456,66 +552,146 @@ io.sockets.on('connection', function (socket) {
         } 
         else
         {
-          // console.log("Interval end for " + color);
-
-          // Nesse caso existe pelo menos um voto de movimento
-          if(games[token].moveVotes.length > 0)
-          {
-            var mostCommonMove;
-
-            if(games[token].moveVotes.length === 1)
-            {
-              mostCommonMove = games[token].moveVotes[0];
-            }
-            else
-            {
-              // TODO This actually returns the last voted in case of a vote draw, should return the first one
-              var sanMoveVotes = [];
-              
-              // Makes a "san" copy of the moves stored
-              games[token].moveVotes.forEach(function(move) {
-                sanMoveVotes.push(move.san)
-              });
-
-              // Gets the most voted san move, in case of a draw it gets the first move
-              var mostCommonSan = mostFrequent(sanMoveVotes);
-
-              mostCommonMove =  _.find(games[token].moveVotes, { 'san': mostCommonSan });
-            }
-
-            var data = { 'token': token, 'move': mostCommonMove };
-          
-            // Make most voted move
-            makeMove(data, token);
-          }
-          // Não existe voto, o computador vai fazer uma jogada aleatória
-          else
-          {
-            var chess = new ch.Chess();
-
-            for(var i=0; i<games[token].moves.length; i++)
-            {
-              chess.move(games[token].moves[i].san);
-            }
-
-            var moves = chess.moves();
-
-            var chosenMove = moves[Math.floor(Math.random() * moves.length)];
-
-            var completeMove = chess.move(chosenMove);
-
-            var data = { 'token': token, 'move': completeMove };
-
-            // Make random move
-            makeMove(data, token);
-          }
-
-          games[token].moveVotes = [];
-
-          startTimer(inverseColor(color),token, socket);
+          calculateVotesAndMakeMove(token, color, socket);
         }
       }, 1000);
     }
+  }
+
+  function checkForFinishedGame(token)
+  {
+    var chess = new ch.Chess();
+
+    for(var i=0; i<games[token].moves.length; i++)
+    {
+      chess.move(games[token].moves[i].san);
+    }
+
+    var validation = chess.validate_fen(chess.fen());
+
+    // The game has an invalid position, we should warn the users and invalidate this token
+    if(validation.valid === false)
+    {
+      console.log("Validation error: " + validation.error);
+      io.sockets.in(token).emit('invalid-game');
+      clearInterval(games[token].interval);
+      delete games[token];
+      return false;
+    }
+
+    if (chess.game_over()) {
+      var result = "";
+
+      if (chess.in_checkmate())
+        result = chess.turn() === 'b' ? 'Checkmate. White wins!' : 'Checkmate. Black wins!'
+      else if (chess.in_draw())
+        result = "Draw.";
+      else if (chess.in_stalemate())
+        result = "Stalemate.";
+      else if (chess.in_threefold_repetition())
+        result = "Draw. (Threefold Repetition)";
+      else if (chess.insufficient_material())
+        result = "Draw. (Insufficient Material)";
+      
+      io.sockets.in(token).emit('finished-game', {
+        'result': result
+      });
+
+      clearInterval(games[token].interval);
+
+      //delete games[token];
+    }
+  }
+
+  function calculateVotesAndMakeMove(token, color, socket)
+  {
+    // Nesse caso existe pelo menos um voto de movimento
+    if(games[token].moveVotes.length > 0)
+    {
+      var mostCommonMove;
+
+      if(games[token].moveVotes.length === 1)
+      {
+        mostCommonMove = games[token].moveVotes[0];
+      }
+      else
+      {
+        var sanMoveVotes = [];
+        
+        // Makes a "san" copy of the moves stored
+        games[token].moveVotes.forEach(function(move) {
+          sanMoveVotes.push(move.san)
+        });
+
+        // Gets the most voted san move, in case of a draw it gets the first move
+        var mostCommonSan = mostFrequent(sanMoveVotes);
+
+        mostCommonMove =  _.find(games[token].moveVotes, { 'san': mostCommonSan });
+      }
+
+      var data = { 'token': token, 'move': mostCommonMove };
+    
+      // Make most voted move
+      makeMove(data, token);
+      
+      games[token].moveVotes = [];
+      games[token].whitelistedMoveVotes = [];
+
+      checkForFinishedGame(token, color);
+
+      startTimer(inverseColor(color),token, socket);
+    }
+    // Não existe voto, o computador vai fazer uma jogada aleatória
+    else
+    {
+      /* Send lost message to all */
+      io.sockets.in(token).emit('lost-game', {
+        'color': color
+      });
+
+      // Put WINNER or LOSER on "won" attribute
+      for (var j in games[token].players) {
+        if(color == games[token].players[j].color)
+        {
+          games[token].players[j].won = -1;
+        }
+        else
+        {
+          games[token].players[j].won = 1;
+        }
+      }
+
+      // Send new player to all people.
+      io.sockets.in(token).emit('receive-players', { 
+        'players' : getCleanPlayers(token)
+      });
+
+      clearInterval(games[token].interval);
+
+      delete games[token];
+
+      /* This makes a random move. Really random move.
+
+      /*var chess = new ch.Chess();
+
+      for(var i=0; i<games[token].moves.length; i++)
+      {
+        chess.move(games[token].moves[i].san);
+      }
+
+      var moves = chess.moves();
+
+      var chosenMove = moves[Math.floor(Math.random() * moves.length)];
+
+      var completeMove = chess.move(chosenMove);
+
+      var data = { 'token': token, 'move': completeMove };
+
+      // Make random move
+      makeMove(data, token);*/
+    }
+
+   
   }
 
   function makeMove(data, token)
@@ -525,7 +701,7 @@ io.sockets.on('connection', function (socket) {
       {
         games[data.token].moves.push(data.move);
 
-        console.dir(games[data.token].moves);
+        //console.dir(games[data.token].moves);
 
         /*io.sockets.in(token).emit('new-moves', {
             'moves': games[data.token].moves
@@ -538,52 +714,54 @@ io.sockets.on('connection', function (socket) {
    
     }
   }
+
+  function mostFrequent(arr) 
+  {
+      var uniqs = {};
+
+      for(var i = 0; i < arr.length; i++) {
+          uniqs[arr[i]] = (uniqs[arr[i]] || 0) + 1;
+      }
+
+      var max = { val: arr[0], count: 1 };
+      for(var u in uniqs) {
+          if(max.count < uniqs[u]) { max = { val: u, count: uniqs[u] }; }
+      }
+
+      return max.val;
+  }
+
+  function getOpponent(token, socket) {
+    var player, game = games[token];
+
+    for (var j in game.players) {
+      player = game.players[j];
+
+      if (player.socket === socket) {
+        var opponent = game.players[Math.abs(j - 1)];
+
+        return opponent;
+      }
+    }
+  }
+
+
+  function inverseColor(color)
+  {
+    if(color == 'white')
+    {
+      return 'black';
+    }
+    else
+    {
+      return 'white';
+    }
+  }
+
+
 });
 
 
-function mostFrequent(arr) {
-    var uniqs = {};
-
-    for(var i = 0; i < arr.length; i++) {
-        uniqs[arr[i]] = (uniqs[arr[i]] || 0) + 1;
-    }
-
-    var max = { val: arr[0], count: 1 };
-    for(var u in uniqs) {
-        if(max.count < uniqs[u]) { max = { val: u, count: uniqs[u] }; }
-    }
-
-    return max.val;
-}
-
-
-
-function getOpponent(token, socket) {
-  var player, game = games[token];
-
-  for (var j in game.players) {
-    player = game.players[j];
-
-    if (player.socket === socket) {
-      var opponent = game.players[Math.abs(j - 1)];
-
-      return opponent;
-    }
-  }
-}
-
-
-function inverseColor(color)
-{
-  if(color == 'white')
-  {
-    return 'black';
-  }
-  else
-  {
-    return 'white';
-  }
-}
 
 
 

@@ -160,7 +160,8 @@ input#nickname.invalid {
 
 .notification {
   position: relative;
-  height: 20px; }
+  height: 20px;
+  z-index: 10; }
 
 .votePiece {
   opacity: 0.25;
@@ -857,7 +858,8 @@ div#moves {
         color: #424242;
         text-decoration: none;
         display: block;
-        cursor: pointer; }
+        cursor: pointer;
+        position: absolute; }
 
 .chess_board tr:nth-child(odd) td:nth-child(even),
 .chess_board tr:nth-child(even) td:nth-child(odd) {

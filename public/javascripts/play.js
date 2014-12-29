@@ -9,7 +9,7 @@ ga('send', 'pageview');
 
 $(function() {
 
-  var from, to, promotion, rcvd;
+  var from, to, promotion, rcvd, realmove;
   var countHiddenMoves = 0;
   var $side  = 'w';
   var $piece = null;
@@ -19,14 +19,16 @@ $(function() {
   var $chessboardBlack = $('.chess_board.black').clone();
   var $name = "";
 
-  var randomPhrases = [ "state your claim",
+
+  var randomPhrases = [   "state your claim",
                           "we will never resign",
                           "Karpov would be proud",
                           "how to en passant?",
                           "genius!",
                           "my team rules",
                           "KP is just lame",
-                          "Carlsen would cringe on that"
+                          "Carlsen would cringe on that",
+                          "Anand would be furious"
                         ]
 
   function modalKeydownHandler(e) {
@@ -102,13 +104,55 @@ $(function() {
     return el ? el.hasClass('selected') : false;
   }
 
-  function movePiece(from, to, promotion, rcvd) {
+  function movePiece(from, to, promotion, rcvd, realmove) {
+    if(from == to)
+    {
+      return;
+    }
 
-    var move = $chess.move({
-      'from': from,
-      'to': to,
-      promotion: promotion
-    });
+    var move;
+
+    if(!realmove)
+    {
+      var copyChess = new Chess();
+      var history = $chess.history()
+
+      history.forEach(function(mv) {
+        copyChess.move(mv);
+      })
+
+      move = copyChess.move({
+        'from': from,
+        'to': to,
+        promotion: promotion
+      });
+
+      if (rcvd === undefined || rcvd === false) {
+        
+        // Invalid move by mistake should not be sent as new-vote
+        if(move !== null)
+        {
+          $socket.emit('new-vote', {
+            'token': $token,
+            'move': move
+          });
+        }
+      }
+
+      return false;
+
+    }
+    else
+    {
+      //console.log("Received real move from server");
+      // Really change the $chess match only if this is a real move, not with previews.
+      move = $chess.move({
+        'from': from,
+        'to': to,
+        promotion: promotion
+      });
+    }
+    
 
     if (move && !$gameOver) {
       var tdFrom = $('td.' + from.toUpperCase());
@@ -123,7 +167,7 @@ $(function() {
       
       var piece = tdFrom.find('a'); // piece being moved
 
-      if(!rcvd)
+      if(!rcvd && !realmove)
       {
         piece.addClass('votePiece');
       }
@@ -139,6 +183,7 @@ $(function() {
       }
       */
       
+     // alert('tdTo' + piece);
       tdTo.html(piece);
 
       $piece = null;
@@ -211,7 +256,7 @@ $(function() {
       $chess.in_check() ? fs.text(' Check.') : fs.text('');
 
       //game over
-      if ($chess.game_over()) {
+      /*if ($chess.game_over()) {
         fm.text('');
         var result = "";
 
@@ -226,10 +271,10 @@ $(function() {
         else if ($chess.insufficient_material())
           result = "Draw. (Insufficient Material)";
         fs.text(result);
-      }
+      }*/
 
       /* Add all moves to the table */
-      var pgn = $chess.pgn({ max_width: 5, newline_char: ',' });
+      /*var pgn = $chess.pgn({ max_width: 5, newline_char: ',' });
       var moves = pgn.split(',');
       var last_move = moves.pop().split('.');
       var move_number = last_move[0];
@@ -238,24 +283,24 @@ $(function() {
       if (move_pgn.indexOf(' ') !== -1) {
         var moves = move_pgn.split(' ');
         move_pgn = moves[1];
-      }
+      }*/
 
-      $('#moves tbody tr').append('<td><strong>' + move_number + '</strong>. ' + move_pgn + '</td>');
+      //$('#moves tbody tr').append('<td><strong>' + move_number + '</strong>. ' + move_pgn + '</td>');
 
-      if (rcvd === undefined) {
+      // if (rcvd === undefined || rcvd === false) {
 
-        $socket.emit('new-vote', {
-          'token': $token,
-          'move': move
-        });
+      //   $socket.emit('new-vote', {
+      //     'token': $token,
+      //     'move': move
+      //   });
 
-       /* $socket.emit('new-move', {
-          'token': $token,
-          'move': move
-        });*/
-      }
+      //  /* $socket.emit('new-move', {
+      //     'token': $token,
+      //     'move': move
+      //   });*/
+      // }
 
-      if ($chess.game_over()) {
+      /*if ($chess.game_over()) {
         $gameOver = true;
 
         $socket.emit('game-over', {
@@ -281,7 +326,7 @@ $(function() {
         $('.clock li').each(function() {
           $(this).toggleClass('ticking');
         });
-      }
+      }*/
     }
   }
 
@@ -343,6 +388,19 @@ $(function() {
     'time': $time,
     'increment': $increment,
     'session': $session
+  });
+
+  $socket.on('ready', function (data) {
+    hideModal();
+  });
+
+  $socket.on('invalid-game', function (data) {
+    showModal('An unexpected error has occurred and your game became invalid. We a really sorry!');
+  });
+
+  $socket.on('finished-game', function (data) {
+    $gameOver = true;
+    showModal(data.result);
   });
 
   $socket.on('reset-board', function (data) {
@@ -423,6 +481,12 @@ $(function() {
       
     // var promotion = data.move.promotion;
   });
+  
+  $socket.on('invalid-move', function (data) {
+    if (!$gameOver) {
+      showModal("You made an invalid move. Please try refreshing your browser.");
+    }
+  });
 
   $socket.on('joined', function (data) {
     if (data.color === 'white') {
@@ -434,14 +498,19 @@ $(function() {
       $('.chess_board.black').show();
     }
 
+    if(data.playerCount <= 1)
+    {
+      showModal("Waiting for someone to connect!")
+    }
+    
     $socket.emit('start-timer', {
       'token': $token
     });
 
+    
+
     if(data.moves.length != 0)
     {
-      console.dir(data.moves);
-
       // Recreate all the game.
       for(var i=0; i<data.moves.length; i++)
       {
@@ -453,9 +522,8 @@ $(function() {
             data.moves[i].promotion = "q";
           }
 
-          movePiece(data.moves[i].from,data.moves[i].to, data.moves[i].promotion, true);
+          movePiece(data.moves[i].from,data.moves[i].to, data.moves[i].promotion, rcvd=true, realmove=true);
         }
-
       }
     }
 
@@ -473,9 +541,6 @@ $(function() {
       $('.black.sendMessage').remove();
       $('.black#chat').css('max-height','237px');
     }
-
-    
-
 
     $('.sendMessage').find('input').addClass($side === 'b' ? 'black' : 'white');
     $('.sendMessage').find('input').attr('placeholder', randomPhrases[Math.floor(Math.random() * randomPhrases.length)])
@@ -519,7 +584,7 @@ $(function() {
           }
 
           //console.log("Moving piece from " + data.moves[i].from + " to " + data.moves[i].to );
-          movePiece(data.moves[i].from,data.moves[i].to, data.moves[i].promotion, true);
+          movePiece(data.moves[i].from,data.moves[i].to, data.moves[i].promotion, rcvd=true, realmove=true);
         }
       }
 
@@ -536,7 +601,7 @@ $(function() {
       $('.vote').remove();
       $('.votePiece').removeClass('votePiece');
 
-      movePiece(from=data.move.from, to=data.move.to, promotion=data.move.promotion, rcvd=true);
+      movePiece(from=data.move.from, to=data.move.to, promotion=data.move.promotion, rcvd=true, realmove=true);
 
       if (typeof document.hidden === undefined) return;
       if (document.hidden) {
@@ -562,6 +627,24 @@ $(function() {
    
   });
 
+  $socket.on('lost-game', function (data) {
+    console.log(data.color + " lost the game");
+    // TO-DO One opponent disconnected
+
+    /* $('.resign').off().remove(); */
+    
+
+    /* $('.sendMessage').off();
+    $('.sendMessage').submit(function (e) {
+      e.preventDefault();
+      showModal(data.color + " lost the gam");
+    });*/
+    var team = data.color.charAt(0).toUpperCase() + data.color.substring(1);
+
+    if (!$gameOver) {
+      showModal(team + " didn't play and lost the game!");
+    }
+  });
   $socket.on('opponent-disconnected', function (data) {
     console.log("One opponent disconnected");
     // TO-DO One opponent disconnected
@@ -604,6 +687,8 @@ $(function() {
 
   function drawPlayers(players)
   {
+    //console.dir(players);
+
     var blackPlayers = _.where(players, { 'color': 'black' } );
     var whitePlayers = _.where(players, { 'color': 'white' } );
 
@@ -645,6 +730,7 @@ $(function() {
         var adminTag = "";
         var meTag = "";
         var you = false;
+        var finishMessage = "";
 
         if(array[i].admin === true)
         {
@@ -659,13 +745,27 @@ $(function() {
           $name = array[i].name;
         }
 
-        if(you)
+        if(array[i].won === 0)
         {
-          ul.append('<a class="profile"><li>'+array[i].name+' '+adminTag+' '+meTag+'</a><span class="lastMove">'+array[i].lastMove+'</span></li>')
+          finishMessage = "";
+        }
+        else if(array[i].won === 1)
+        {
+          finishMessage = " Won!";
         }
         else
         {
-          ul.append('<li>'+array[i].name+' '+adminTag+' '+meTag+'<span class="lastMove">'+array[i].lastMove+'</span></li>')
+          finishMessage = " Lost!";
+        }
+        
+
+        if(you)
+        {
+          ul.append('<a class="profile"><li>'+array[i].name+' '+adminTag+' '+meTag+'</a><span class="lastMove">'+array[i].lastMove+finishMessage+'</span></li>')
+        }
+        else
+        {
+          ul.append('<li>'+array[i].name+' '+adminTag+' '+meTag+'<span class="lastMove">'+array[i].lastMove+finishMessage+'</span></li>')
         }
 
         $('.profile').click(function(e) {
@@ -828,7 +928,9 @@ $(function() {
         movePiece(
           from=$piece.parent().data('id').toLowerCase(),
           to=$(this).parent().data('id').toLowerCase(),
-          promotion=$('#promotion option:selected').val()
+          promotion=$('#promotion option:selected').val(),
+          rcvd=false,
+          realmove=false
         );
       }
     } else {
@@ -860,7 +962,9 @@ $(function() {
       movePiece(
         from=$piece.parent().data('id').toLowerCase(),
         to=$(this).data('id').toLowerCase(),
-        promotion=$('#promotion option:selected').val()
+        promotion=$('#promotion option:selected').val(),
+        rcvd=false,
+        realmove=false
       )
     }
   }
@@ -876,7 +980,7 @@ $(function() {
     $drgSrcEl = el;
     $drgSrcEl.parent().addClass('moving');
     e.originalEvent.dataTransfer.effectAllowed = 'move';
-    e.originalEvent.dataTransfer.setData('text/html', el.html());
+    e.originalEvent.dataTransfer.setData('text/html', el.html()+"!!!!!");
     movePieceFromHandler.call(this, undefined);
   }
 
@@ -968,7 +1072,6 @@ $(function() {
       if (chat_node.scrollHeight > 300) {
         setTimeout(function() { chat_node.scrollTop = chat_node.scrollHeight; }, 50);
       }
-
 
       $socket.emit('send-message', {
         'message': message,

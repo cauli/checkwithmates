@@ -201,6 +201,7 @@ input#nickname.invalid
 {
   position:relative;
   height:20px;
+  z-index: 10;
 }
 
 .votePiece
@@ -1051,6 +1052,7 @@ div#moves {
         text-decoration: none;
         display: block;
         cursor: pointer;
+        position: absolute;
       }
     }
   }
