@@ -118,7 +118,7 @@ io.sockets.on('connection', function (socket) {
       'creator': socket,
       'creatorName': creatorName,
       'players': [],
-      'time': 10,
+      'time': data.time,
       'interval': null,
       'timeout': timeout,
       'moveVotes': [],
@@ -274,7 +274,7 @@ io.sockets.on('connection', function (socket) {
     // Send current move votes to the new player
     games[data.token].moveVotes.forEach(function(move) {
       var count = countOccurences(move.san, data.token)
-      socket.emit('show-vote', {'count': count, 'move':move});
+      socket.emit('show-vote', {'count': count, 'move':move, 'by':move.by});
     });
   });
   
@@ -369,9 +369,6 @@ io.sockets.on('connection', function (socket) {
         }
         else
         {
-          games[data.token].moveVotes.push(data.move);
-        
-          data.count = countOccurences(data.move.san, data.token);
 
           // TODO Cache this count on the game object. 
           var playerCount;
@@ -390,8 +387,15 @@ io.sockets.on('connection', function (socket) {
 
             if (player.socket === socket) {
               games[data.token].players[j].lastMove = data.move.san;
+              data.by = games[data.token].players[j].name;
+              data.move.by = games[data.token].players[j].name;
             }
           }
+
+
+          games[data.token].moveVotes.push(data.move);
+        
+          data.count = countOccurences(data.move.san, data.token);
 
           // Showing votes for everyone
           io.sockets.in(data.token).emit('show-vote', data);
@@ -446,8 +450,8 @@ io.sockets.on('connection', function (socket) {
           // remove from the players array of the game
           games[token].players.splice(j, 1);
 
-          games[token].blackPlayers = _.where(games[data.token].players, { 'color': 'black' } ).length;
-          games[token].whitePlayers = _.where(games[data.token].players, { 'color': 'white' } ).length;
+          games[token].blackPlayers = _.where(games[token].players, { 'color': 'black' } ).length;
+          games[token].whitePlayers = _.where(games[token].players, { 'color': 'white' } ).length;
 
           opponent = game.players[Math.abs(j - 1)];
           if (opponent) {
@@ -492,6 +496,7 @@ io.sockets.on('connection', function (socket) {
   socket.on('start-timer', function (data) {
     if (data.token in games)
     {
+       // If the game has not yet started and the player entering is not the room's creator
        if(games[data.token].timerStarted === false && games[data.token].players.length > 1)
        {
           games[data.token].timerStarted = true;
@@ -515,7 +520,7 @@ io.sockets.on('connection', function (socket) {
 
     if (token in games) {
       games[token].currentColor = color;
-      game.timeWhite = game.timeBlack = games[token].time = 10;
+      game.timeWhite = game.timeBlack = games[token].time;
 
       // Clean up last moves
       for(var i =0; i < games[token].players.length; i++)

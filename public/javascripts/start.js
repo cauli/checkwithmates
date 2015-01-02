@@ -4,10 +4,71 @@ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
 ga('create', 'UA-58047511-1', 'auto');
+ga('require', 'displayfeatures');
 ga('send', 'pageview');
 
 
 $(function () {
+
+  var lastRoomClicked = "";
+
+  function showNickname(payload, options) {
+    $('#nickname-message').text(payload.msg);
+    $('#nickname-ok').text('Enter');
+
+    lastRoomClicked = payload.room;
+
+    $('#nickname-mask').fadeIn(200);
+    $(document).on('keydown', options, nicknameKeydownHandler);
+  }
+
+  function hideNickname(enter) {
+    $('#nickname-mask').fadeOut(200);
+    $(document).off('keydown', nicknameKeydownHandler);
+
+    if(enter)
+    {
+      joinLastClickedRoom();
+    }
+  }
+
+  $('#nickname-mask, #nickname-cancel').click(function (e) {
+    e.preventDefault();
+    hideNickname(false);
+  });
+
+  $('#nickname-ok').click(function(e) {
+    var name = $('#nickname-inside').val();
+    setName(name);
+    hideNickname(true);
+  });
+
+  function nicknameKeydownHandler(e) {
+    if (e.which === 13) {
+      hideNickname(true);
+    } else if (e.which === 27) {
+      hideNickname(false);
+    }
+  }
+
+  function setName(name)
+  {
+    $.cookie("name", name);
+  }
+
+  function getName()
+  {
+    return $.cookie("name");
+  }
+
+  $('#nickname-window').click(function (e) {
+    e.stopPropagation();
+  });
+
+  function joinLastClickedRoom(){
+    document.location = lastRoomClicked;
+  }
+
   var $token, $time, $increment, $nickname;
 
   $socket.emit('ask-for-rooms');
@@ -17,8 +78,6 @@ $(function () {
   }, 4000);
  
   $socket.on('rooms', function (data) {
-    console.log("Got rooms!")
-    console.dir(data.rooms);
     var rooms = data.rooms;
 
     $('#room-list').empty();
@@ -38,7 +97,13 @@ $(function () {
           $('#room-list').append("<span class='separator'></span>");
         }
 
-        $('#room-list').append("<a href='"+link+"'>"+ data.rooms[i].name + " - " + data.rooms[i].whitePlayers + "vs"+ data.rooms[i].blackPlayers+"</a>");
+        $('#room-list').append("<a href='#' id='room"+i+"' room='"+link+"'>"+ data.rooms[i].name + " - " + data.rooms[i].whitePlayers + "vs"+ data.rooms[i].blackPlayers+"</a>");
+        
+        $('#room'+i).click(function() {
+          showNickname({'msg':'Choose your nickname:','room':link}, {
+            accept: joinLastClickedRoom
+          });
+        });
       }
     }
   });
@@ -46,13 +111,6 @@ $(function () {
   $socket.on('created', function (data) {
     $token = data.token;
 
-    /* $('#waiting').text('Wating for opponent to connect.');
-
-    $('#game_link').html($URL + '/play/' + $token + '/' + $time + '/' + $increment); // create game link
-    $('#game_link').click(function() {
-      $(this).select(); // when clicked, link is automatically selected for convenience
-    });*/
-    
     document.location = $URL + '/play/' + $token + '/' + $time + '/' + $increment + '/' + $socket.socket.sessionid;
   });
 
@@ -71,9 +129,15 @@ $(function () {
     $('#play').click();
   });
 
+  if(getName() !== null)
+  {
+    $('#nickname').val(getName());
+  }
+
   $('#play').click(function (ev) {
     var nickname = $('#nickname');
     $nickname = $('#nickname').val();
+
 
     if($nickname.length <= 1)
     {
@@ -82,11 +146,15 @@ $(function () {
       return false;
     }
 
+    // Set a cookie for the name
+    setName($nickname);
+
     $time = 10;
     $increment = 0;
 
     $socket.emit('start', {
-      'creatorName':$nickname
+      'creatorName':$nickname,
+      'time':60
     });
 
     $('#waiting').text('Generating game link').slideDown(400);

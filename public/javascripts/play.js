@@ -4,6 +4,7 @@ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
 ga('create', 'UA-58047511-1', 'auto');
+ga('require', 'displayfeatures');
 ga('send', 'pageview');
 
 
@@ -30,6 +31,16 @@ $(function() {
                           "Carlsen would cringe on that",
                           "Anand would be furious"
                         ]
+
+
+
+
+  function promotionKeydownHandler(e) {
+    e.preventDefault();
+    if (e.which === 13 || e.which === 27) {
+      hidePromotion('q', e.data.options);
+    }
+  }
 
   function modalKeydownHandler(e) {
     e.preventDefault();
@@ -59,6 +70,51 @@ $(function() {
     }
   }
 
+  function showPromotion($token, from, to) {
+    $('#promotion-mask').fadeIn(200);
+
+    var options = { 
+      'token': $token,
+      'from': from,
+      'to': to
+    }
+
+    $('#promotion-queen').click(function() {
+      hidePromotion('q',options);
+    });
+
+    $('#promotion-rook').click(function() {
+      hidePromotion('r',options);
+    });
+
+    $('#promotion-knight').click(function() {
+      hidePromotion('n',options);
+    });
+
+    $('#promotion-bishop').click(function() {
+      hidePromotion('b',options);
+    });
+
+    $(document).on('keydown', options, promotionKeydownHandler);
+  }
+
+  function getName()
+  {
+    return $.cookie("name");
+  }
+
+  setTimeout(function() {
+    if(getName() !== null)
+    {
+      $socket.emit('name-change', {
+        'token': $token,
+        'name' : escapeHTML(getName())
+      })
+    }
+  }, 100)
+
+
+
   function showModal(message) {
     $('#modal-message').text(message);
     $('#modal-mask').fadeIn(200);
@@ -67,8 +123,40 @@ $(function() {
 
   function showNickname(message, options) {
     $('#nickname-message').text(message);
+    $('#nickname-ok').text('Choose');
     $('#nickname-mask').fadeIn(200);
     $(document).on('keydown', options, nicknameKeydownHandler);
+  }
+
+  function hidePromotion(piece, options) {
+    var token = options.token;
+    var from = options.from;
+    var to = options.to;
+
+    var copyChess = new Chess();
+    var history = $chess.history()
+
+    history.forEach(function(mv) {
+      copyChess.move(mv);
+    })
+
+    var move = copyChess.move({
+      'from': from,
+      'to': to,
+      promotion: piece
+    });
+
+    if(move !== null)
+    {
+      $socket.emit('new-vote', {
+        'token': token,
+        'move': move
+      });
+    }
+
+
+    $('#promotion-mask').fadeOut(200);
+    $(document).off('keydown', promotionKeydownHandler);
   }
 
   function hideNickname() {
@@ -121,6 +209,7 @@ $(function() {
         copyChess.move(mv);
       })
 
+      // Apenas para verificar se esse movimento seria válido. Na verdade ele não é feito, é feito apenas em uma cópia [buffer] do chess.
       move = copyChess.move({
         'from': from,
         'to': to,
@@ -132,10 +221,18 @@ $(function() {
         // Invalid move by mistake should not be sent as new-vote
         if(move !== null)
         {
-          $socket.emit('new-vote', {
-            'token': $token,
-            'move': move
-          });
+
+          if (move.flags === 'np' || move.flags === 'cp')
+          {
+            showPromotion($token, from, to);
+          }
+          else
+          {
+            $socket.emit('new-vote', {
+              'token': $token,
+              'move': move
+            });
+          } 
         }
       }
 
@@ -240,6 +337,8 @@ $(function() {
         } else {
           square.html(promotion_b[option]);
         }
+
+
       }
       
       if ($('#sounds').is(':checked')) {
@@ -453,7 +552,7 @@ $(function() {
     if(square.length === 0 || slot.find('.count').length === 0)
     {
       // This square doesn't have a piece yet or any notifications
-      slot.append('<div class="vote"><a draggable="false" class="votePiece">'+pieces[pieceToPut]+'</a><div class="notification"><span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san.replace(/\#/gi, '') + '</span></span></div></div>');
+      slot.append('<div class="vote"><a draggable="false" class="votePiece">'+pieces[pieceToPut]+'</a><div class="notification"><span class="count '+colorClass+'">'+ ( data.count == 1 ? escapeHTML(data.by) : escapeHTML(data.count)) +" <span class='san'>" + escapeHTML(data.move.san.replace(/\#/gi, '')) + '</span></span></div></div>');
     }
     else
     {
@@ -465,7 +564,7 @@ $(function() {
         if($(this).find('.san').text() == data.move.san.replace(/\#/gi, ''))
         {
           found = true;
-          $(this).find('.count').html(data.count + " <span class='san'>" + data.move.san.replace(/\#/gi, '') + "</span>");
+          $(this).find('.count').html(( data.count == 1 ? escapeHTML(data.by) : escapeHTML(data.count)) + " <span class='san'>" + data.move.san.replace(/\#/gi, '') + "</span>");
         }
       });
 
@@ -473,7 +572,7 @@ $(function() {
       if(found == false)
       {
         slot.find('.votePiece').last().after('<a draggable="false" class="votePiece multiple">'+pieces[pieceToPut]+'</a>');
-        slot.find('.vote').append('<div class="notification"><span class="count '+colorClass+'">'+data.count +" <span class='san'>" + data.move.san.replace(/\#/gi, '') + '</span></span></div>')
+        slot.find('.vote').append('<div class="notification"><span class="count '+colorClass+'">' + ( data.count == 1 ? escapeHTML(data.by) : escapeHTML(data.count)) +" <span class='san'>" + data.move.san.replace(/\#/gi, '') + '</span></span></div>')
       }
     }
 
