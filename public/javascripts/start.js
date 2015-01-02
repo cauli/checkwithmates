@@ -154,7 +154,7 @@ $(function () {
 
     $socket.emit('start', {
       'creatorName':$nickname,
-      'time':60
+      'time':12
     });
 
     $('#waiting').text('Generating game link').slideDown(400);
