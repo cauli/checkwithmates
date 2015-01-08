@@ -2,23 +2,58 @@ extends layout
 
 block content
   
-  div.bg#loginBg
+  // div.bg#loginBg
 
-  img(src="/images/logo_login.png")#logo_login(alt="Check with Mates")
+  header.clearfix
+    div
+      a(href='/')
+        img(src="/images/logo_header.png")#logo_header
+      -if(username && username.length > 0)
+        span.nav Hi, 
+        a.nav.unpadleft(href='/profile/#{username}')=username
+      a.nav.right.padright(href='/logout') logout
+      //-a.nav.right(href='/lobby') lobby
+
+
+  div#posLeft
+    h1 join table
+      div#room-list
 
   div#posRight
-    h1 join room
-    div#room-list
-  
-    h1 create new room
+    h1 create new table
     div#form
       form#create_form
-        input#nickname(placeholder='insert nickname', maxlength='15')
-        div#play(type='submit') let's play
+        label#name-of-room.main(for='nickname') name of the table
+        input.textinput#room-name(placeholder='table name', maxlength='18')
+
+        label.main choose the game mode
+
+        div.list-holder
+          div.list-item
+             
+            //- input.radio(id='consensus', type='radio', name='mode', value='1', checked)
+            //- label.radio(for='consensus') consensus  
+            //- br 
+            input.radio(id='playorlose', type='radio', name='mode', value='2', checked)
+            label.radio(for='playorlose') play or lose  
+            //- br
+            //- input.radio(id='pingpong', type='radio', name='mode', value='3')
+            //- label.radio(for='pingpong') ping-pong  
+
+
+        label.main options for this game mode
+        br
+        input#turnTime.two-digit.textinput(placeholder='10', value='10', type='number', max='30', min='3')
+        span.medium seconds per turn
+
+        div#play(type='submit') create room
       div#game_link.game_link
 
       p#waiting Generating game link.
   
 block scripts
+  script.
+    username = "#{username}";
   script(type='text/javascript', src='/javascripts/start.js')
   script(type='text/javascript', src='/javascripts/nickname.js')
+ 

@@ -1,11 +1,20 @@
-var express = require('express')
-  , path    = require('path')
-  , crypto  = require('crypto')
-  , http    = require('http')
-  , winston = require('winston')
-  , fs      = require('fs')
-  , _       = require('lodash')
-  , ch      = require('./chess');
+var express     = require('express')
+  , path        = require('path')
+  , crypto      = require('crypto')
+  , http        = require('http')
+  , winston     = require('winston')
+  , fs          = require('fs')
+  , _           = require('lodash')
+  , ch          = require('./chess')
+  , passport    = require('passport')
+  , dbconfig    = require('./config/database')
+  , emailconfig = require('./config/email')
+  , flash       = require('connect-flash')
+  , bodyParser  = require('body-parser')
+  , nodemailer  = require('nodemailer');
+
+var transporter = nodemailer.createTransport(emailconfig);
+
 
 var app = express();
 
@@ -16,34 +25,168 @@ app.configure(function() {
   app.set('view engine', 'jade');
   app.use(express.favicon());
   app.use(express.logger('dev'));
+  //app.use(express.json());
+  app.use(express.cookieParser('checkwithsecrets'));
   app.use(express.bodyParser());
+  //app.use(express.multipart());
   app.use(express.methodOverride());
   app.use(express.cookieParser('45710b553b5b7293753d03bd3601f70a'));
   app.use(express.session());
-  app.use(app.router);
+  
+  app.use(flash());
+  
   app.use(express.static(path.join(__dirname, 'public')));
+
+  // required for passport
+
+  app.use(express.session({ secret: '99audjemncpslas]feoj392kjmdw' } )); // session secret
+  
+  app.use(passport.initialize());
+  app.use(passport.session()); // persistent login sessions
+  app.use(app.router);
+
 });
+
+require('./config/passport')(passport); // pass passport for configuration
 
 app.configure('development', function() {
   app.use(express.errorHandler());
 });
 
-app.get('/', function(req, res) {
-  res.render('index');
+app.get('/', isLoggedIn, function(req, res) {
+  var info =  req.flash('loginMessage');
+  console.log(info);
+  res.render('index', { message: "" +info + "", username: req.user.username });
+});
+
+app.get('/lobby', isLoggedIn, function(req, res) {
+  var info =  req.flash('loginMessage');
+  console.log(info);
+  res.render('index', { message: "" +info + "", username: req.user.username });
+});
+
+app.get('/profile', isLoggedIn, function(req, res) {
+  var info =  req.flash('loginMessage');
+  console.log(info);
+  res.render('index', { message: "" +info + "", username: req.user.username });
+});
+
+
+// =====================================
+// FORGOT===============================
+// =====================================
+
+app.get('/forgot', function(req, res) {
+  var info =  req.flash('forgotMessage');
+  res.render('forgot', { message: "" +info + "" });
+});
+
+app.post('/forgot', function(req, res){    
+
+    var email = req.body.email;
+    console.log("Requested forgot for email");
+});
+
+/*function forgotEmail(email) {
+  // TODO just a stub for email
+  var mailOptions = {
+      from: 'Check With Mates <checkwithmates@cau.li>', // sender address
+      to: email, 
+      subject: 'Reset your password', 
+      text: 'Hello from Check With Mates. It looks like you forgot your email. Please go to this link to reset it :  ', 
+      html: '<b>Hello from Check With Mates.</b>It looks like you forgot your email. Please go to this link to reset it : Didn\'t send this message? You can either ignore this message or cancel the account associated with this email'
+  };
+
+  // send mail with defined transport object
+  transporter.sendMail(mailOptions, function(error, info) {
+      if (error) {
+          console.log(error);
+      } else {
+          console.log('Message sent: ' + info.response);
+      }
+  });
+}*/
+
+
+// =====================================
+// LOGIN ===============================
+// =====================================
+
+app.get('/login', function(req, res) {
+  var info = req.flash('loginMessage');
+  console.log(info)
+  res.render('login', { message: "" +info + "" });
+});
+
+app.post('/login', passport.authenticate('local-login', {
+  successRedirect : '/', // redirect to the secure profile section
+  failureRedirect : '/login', // redirect back to the login page if there is an error
+  failureFlash : true // allow flash messages
+}));
+
+// =====================================
+// LOGOUT ==============================
+// =====================================
+
+app.get('/logout', function(req, res) {
+  req.logout();
+  res.redirect('/login');
 });
 
 app.get('/about', function(req, res) {
   res.render('about');
 });
 
-app.get('/play/:token/:time/:increment/:session', function(req, res) {
+app.get('/signup', function(req, res) {
+  res.render('signup', { message: req.flash('signupMessage') });
+});
+
+
+// =====================================
+// SIGNUP ==============================
+// =====================================
+
+app.post('/signup', passport.authenticate('local-signup', {
+  successRedirect : '/', // redirect to the secure lobby section
+  failureRedirect : '/signup', // redirect back to the signup page if there is an error
+  failureFlash : true // allow flash messages
+}));
+
+
+// =====================================
+// PROFILE =============================
+// =====================================
+
+app.get('/profile/:name', isLoggedIn, function(req, res) {
+  res.render('profile', {
+    'name': cleanInput(req.params.name),
+    username: req.user.username });
+});
+
+function cleanInput(input)
+{
+  return input.replace(/(<([^>]+)>)/ig,"");
+}
+
+app.get('/play/:token/:time/:increment/:session', isLoggedIn, function(req, res) {
   res.render('play', {
     'token': req.params.token,
     'time': req.params.time,
     'increment': req.params.increment,
-    'session': req.params.session
+    'session': req.params.session,
+    'username': req.user.username
   });
 });
+
+function isLoggedIn(req, res, next) {
+
+  // if user is authenticated in the session, carry on
+  if (req.isAuthenticated())
+    return next();
+
+  // if they aren't redirect them to the home page
+  res.redirect('/login');
+}
 
 app.get('/logs', function(req, res) {
   fs.readFile(__dirname + '/logs/games.log', function (err, data) {
@@ -79,12 +222,18 @@ winston.exitOnError = false;
  */
 var io = require('socket.io').listen(server, {log: false});
 
+
 // Only runs on production
 if (process.env.PORT) {
   io.configure(function () { 
     io.set("transports", ["xhr-polling"]); 
     io.set("polling duration", 15); 
   });
+}
+
+
+function forgotEmail() {
+
 }
 
 io.sockets.on('connection', function (socket) {
@@ -94,8 +243,15 @@ io.sockets.on('connection', function (socket) {
     var b = new Buffer(Math.random() + new Date().getTime() + socket.id);
     token = b.toString('base64').slice(12, 32);
 
-    var creatorName = data.creatorName;
+    console.log('Starting');
+    console.dir(data);
+    var creatorName = cleanInput(data.creatorName);
+    var roomName = cleanInput(data.roomName);
 
+    if(roomName.length === 0)
+    {
+      roomName = creatorName+'\'s table'; 
+    }
     //token is valid for 20 minutes
     var timeout = setTimeout(function () {
       if (!(token in games)) 
@@ -110,8 +266,6 @@ io.sockets.on('connection', function (socket) {
           socket.emit('token-invalid');
         }
       }
-
-      
     }, 20 * 60 * 1000);
 
     games[token] = {
@@ -125,7 +279,7 @@ io.sockets.on('connection', function (socket) {
       'whitelistedMoveVotes': [],
       'currentColor' : "white",
       'timerStarted' : false,
-      'name' : creatorName+"\'s room",
+      'name' : roomName,
       'token' : token.toString(),
       'hasAdmin' : false,
       'whitePlayers' : 0,
@@ -159,13 +313,15 @@ io.sockets.on('connection', function (socket) {
        sendGames.push(sendObj);
     }
 
-    console.dir(sendGames);
+    //console.dir(sendGames);
 
     socket.emit('rooms', { 
       'rooms' : sendGames
     })
   });
 
+  /* DEPRECATED WITH LOGIN SYSTEM */
+  /*
   socket.on('name-change', function (data) {
     if (!(data.token in games)) 
     {
@@ -187,6 +343,7 @@ io.sockets.on('connection', function (socket) {
       'players' : getCleanPlayers(data.token)
     });
   });
+  */
 
 
   socket.on('join', function (data) {
@@ -203,7 +360,17 @@ io.sockets.on('connection', function (socket) {
     game = games[data.token];
 
     var admin = false;
-    var name = 'Guest'+Math.ceil(Math.random()*1000);
+
+    var name = '';
+
+    if(typeof data.username === undefined)
+    {
+      name = 'Guest'+Math.ceil(Math.random()*1000);
+    }
+    else
+    {
+      name = data.name;
+    }
 
     // Checka se é o criador da sala e
     // TODO Dá autoridade de admin para ele
@@ -257,8 +424,6 @@ io.sockets.on('connection', function (socket) {
 
     games[data.token].blackPlayers = _.where(games[data.token].players, { 'color': 'black' } ).length;
     games[data.token].whitePlayers = _.where(games[data.token].players, { 'color': 'white' } ).length;
-
-   
 
     // Send new player to all people.
     io.sockets.in(data.token).emit('receive-players', { 
@@ -404,11 +569,7 @@ io.sockets.on('connection', function (socket) {
           {
             calculateVotesAndMakeMove(data.token, fullColor, socket );
           }
-        }
-
-
-
-        
+        }      
       }
     }
   });
@@ -427,7 +588,7 @@ io.sockets.on('connection', function (socket) {
     {
       if(sanMoveVotes[i] == san)
       {
-        console.log(sanMoveVotes[i] + " is equal to " + san);
+        // sanMoveVotes[i] + " is equal to " + san
         count++;
       }
     }
@@ -442,10 +603,15 @@ io.sockets.on('connection', function (socket) {
     for (var token in games) {
     game = games[token];
 
+      var count = 0;
+
       for (var j in game.players) {
+        count++;
         player = game.players[j];
 
         if (player.socket === socket) {
+
+          console.log(games[token].players[j].name + ' disconnected from ' + token);
 
           // remove from the players array of the game
           games[token].players.splice(j, 1);
@@ -464,12 +630,27 @@ io.sockets.on('connection', function (socket) {
           //clearInterval(games[token].interval);
         }
       }
+
+
+      
+      // If 0 players, close room
+      /*if(count === 0)
+      {
+        delete games[token];
+      }*/
     }
   });
 
   function cleanInput(input)
   {
-    return input.replace(/(<([^>]+)>)/ig,"");
+    if(typeof input === undefined || !input)
+    {
+      return "";
+    }
+    else
+    {
+      return input.replace(/(<([^>]+)>)/ig,"");
+    }
   }
 
   socket.on('send-message', function (data) {
@@ -479,8 +660,8 @@ io.sockets.on('connection', function (socket) {
 
       received.username = "Unknown";
 
-      received.color = cleanInput(data.color);
-      received.message = cleanInput(data.message);
+      received.color = (data.color);
+      received.message = (data.message);
 
       for (var j in games[data.token].players) {
         if(socket.id == games[data.token].players[j].socket.id)
@@ -706,12 +887,6 @@ io.sockets.on('connection', function (socket) {
       {
         games[data.token].moves.push(data.move);
 
-        //console.dir(games[data.token].moves);
-
-        /*io.sockets.in(token).emit('new-moves', {
-            'moves': games[data.token].moves
-        });*/
-
         io.sockets.in(token).emit('move', {
             'move': data.move
         });
@@ -762,8 +937,6 @@ io.sockets.on('connection', function (socket) {
       return 'white';
     }
   }
-
-
 });
 
 

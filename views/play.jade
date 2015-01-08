@@ -6,13 +6,20 @@ block head
     $time = #{time};
     $increment = #{increment};
     $session = '#{session}';
+    $username = '#{username}'
 
 block content
   div.bg#playBg
 
   header.clearfix
-    a(href='/')
-      img(src="/images/logo_header.png")#logo_header
+    div
+      a(href='/')
+        img(src="/images/logo_header.png")#logo_header
+      -if(username && username.length > 0)
+        span.nav Hi, 
+        a.nav.unpadleft(href='/profile/#{username}')=username
+      a.nav.right.padright(href='/logout') logout
+      //-a.nav.right(href='/lobby') lobby
 
   audio(id='moveSnd', preload='auto')
     source(src='/sounds/move.mp3')
@@ -283,5 +290,7 @@ block content
       span.feedback-status
 
 block scripts
+  script.
+    username = '#{username}'
   script(type='text/javascript', src='/javascripts/play.js')
   script(type='text/javascript', src='/javascripts/nickname.js')

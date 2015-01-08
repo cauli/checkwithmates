@@ -18,8 +18,9 @@ $(function() {
   var $gameOver = false;
   var $chessboardWhite = $('.chess_board.white').clone();
   var $chessboardBlack = $('.chess_board.black').clone();
-  var $name = "";
+  var $username = username;
 
+  var $lastDragged;
 
   var randomPhrases = [   "state your claim",
                           "we will never resign",
@@ -31,8 +32,6 @@ $(function() {
                           "Carlsen would cringe on that",
                           "Anand would be furious"
                         ]
-
-
 
 
   function promotionKeydownHandler(e) {
@@ -486,7 +485,8 @@ $(function() {
     'token': $token,
     'time': $time,
     'increment': $increment,
-    'session': $session
+    'session': $session,
+    'name': username
   });
 
   $socket.on('ready', function (data) {
@@ -841,7 +841,6 @@ $(function() {
         {
           you = true;
           meTag = "(you)";
-          $name = array[i].name;
         }
 
         if(array[i].won === 0)
@@ -857,42 +856,9 @@ $(function() {
           finishMessage = " Lost!";
         }
         
-
-        if(you)
-        {
-          ul.append('<a class="profile"><li>'+array[i].name+' '+adminTag+' '+meTag+'</a><span class="lastMove">'+array[i].lastMove+finishMessage+'</span></li>')
-        }
-        else
-        {
-          ul.append('<li>'+array[i].name+' '+adminTag+' '+meTag+'<span class="lastMove">'+array[i].lastMove+finishMessage+'</span></li>')
-        }
-
-        $('.profile').click(function(e) {
-          e.preventDefault();
-
-          showNickname('Change your nickname to:', {
-            accept: triggerNameChange
-          });
-        })
+        ul.append('<li>'+array[i].name+' '+adminTag+' '+meTag+'<span class="lastMove">'+array[i].lastMove+finishMessage+'</span></li>')
       }
     }
-  }
-
-  function triggerNameChange(name)
-  {
-    console.log("Triggering name change to " + name);
-    if(name.length > 1 && name.length < 15)
-    {
-      $socket.emit('name-change', {
-        'token': $token,
-        'name' : escapeHTML(name)
-      })
-    }
-    else
-    {
-      console.error('Invalid name.');
-    }
-    
   }
 
   $socket.on('full', function (data) {
@@ -1056,11 +1022,37 @@ $(function() {
     }
   }
 
+  function makePossibleSquare(square) {
+    if ($chess.turn() !== $side) {
+      return false;
+    }
+    
+    var $sq = $('.'+square.toUpperCase());
+
+    if($sq.find('.circle').length === 0)
+    {
+      var circle = "<div class='circle purple'></div>";
+      $sq.append(circle);
+    }
+  }
+
   function movePieceToHandler(e) {
+
+
     if ($piece) {
+
+      from = $piece.parent().data('id').toLowerCase();
+      to = $(this).data('id').toLowerCase();
+
+
+      if(from != to)
+      {
+        $('.circle').remove();
+      }
+      
       movePiece(
-        from=$piece.parent().data('id').toLowerCase(),
-        to=$(this).data('id').toLowerCase(),
+        from,
+        to,
         promotion=$('#promotion option:selected').val(),
         rcvd=false,
         realmove=false
@@ -1074,16 +1066,48 @@ $(function() {
     return 'draggable' in document.createElement('span');
   }
 
+
+
   function dragstartHandler(e) {
     var el = $(this);
+
+
+     // If this element is not the last selected element
+    if(el != $lastDragged)
+    { 
+      $('.circle').remove();
+    }
+
+    $lastDragged = el;
+
+
     $drgSrcEl = el;
+
+    var square = $drgSrcEl.parent().data('id').toLowerCase();
+
+    // get list of possible moves for this square
+    var moves = $chess.moves({
+      square: square,
+      verbose: true
+    });
+
+    // exit if there are no moves available for this square
+    if (moves.length === 0) return;
+
+    // highlight the possible squares for this piece
+    for (var i = 0; i < moves.length; i++) {
+      makePossibleSquare(moves[i].to); 
+      $('.circle').addClass('grow')
+    }
+    
     $drgSrcEl.parent().addClass('moving');
     e.originalEvent.dataTransfer.effectAllowed = 'move';
-    e.originalEvent.dataTransfer.setData('text/html', el.html()+"!!!!!");
+    e.originalEvent.dataTransfer.setData('text/html', el.html());
     movePieceFromHandler.call(this, undefined);
   }
 
   function dropHandler(e) {
+   
     e.stopPropagation();
     e.preventDefault();
     movePieceToHandler.call(this, undefined);
@@ -1165,7 +1189,7 @@ $(function() {
 
     if (!/^\W*$/.test(message)) {
       input.val('');
-      chat.append('<li class="' + color + ' right" ><span class="username">' + escapeHTML($name) + '</span> <span class="textChat">' + escapeHTML(message) + '</span></li>');
+      chat.append('<li class="' + color + ' right" ><span class="username">' + escapeHTML(username) + '</span> <span class="textChat">' + escapeHTML(message) + '</span></li>');
 
       var chat_node = chat[0];
       if (chat_node.scrollHeight > 300) {

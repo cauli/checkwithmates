@@ -1,4 +1,4 @@
-.DS_Store
-public/stylesheets/.sass-cache/
-node_modules/
-logs/
+/config/database.js
+/config/email.js
+/node_modules
+/logs

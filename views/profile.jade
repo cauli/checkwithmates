@@ -1,0 +1,42 @@
+extends layout
+
+block content
+  
+  // div.bg#loginBg
+
+  header.clearfix
+    div
+      a(href='/')
+        img(src="/images/logo_header.png")#logo_header
+      -if(username && username.length > 0)
+        span.nav Hi, 
+        a.nav.unpadleft(href='/profile/#{username}')=username
+      a.nav.right.padright(href='/logout') logout
+      //-a.nav.right(href='/lobby') lobby
+
+  h1#profile-name !{name}
+
+  p.info sorry, we are still creating this page.
+  
+  ul games summary
+    li won ?
+    li lost ?
+    li draw ?
+
+  ul games summary (white)
+    li won ?
+    li lost ?
+    li draw ?
+
+  ul games summary (black)
+    li won ?
+    li lost ?
+    li draw ?
+   
+   
+
+
+  
+block scripts
+  script(type='text/javascript', src='/javascripts/start.js')
+  script(type='text/javascript', src='/javascripts/nickname.js')

@@ -11,7 +11,14 @@ ga('send', 'pageview');
 $(function () {
 
   var lastRoomClicked = "";
+  var maxTurnTime = 30;
+  var minTurnTime = 3;
 
+  ////////////////////////////////////////////////////////////////
+  // Nickname handlers are now deprecated with the login system //
+  ////////////////////////////////////////////////////////////////
+
+  /*
   function showNickname(payload, options) {
     $('#nickname-message').text(payload.msg);
     $('#nickname-ok').text('Enter');
@@ -64,6 +71,7 @@ $(function () {
   $('#nickname-window').click(function (e) {
     e.stopPropagation();
   });
+  */
 
   function joinLastClickedRoom(){
     document.location = lastRoomClicked;
@@ -84,7 +92,7 @@ $(function () {
 
     if(data.rooms.length === 0)
     {
-      $('#room-list').append("<span id='no_rooms'>no rooms found, try creating one!</span>");
+      $('#room-list').append("<span id='no_rooms'>no tables found, try creating one!</span>");
     }
     else
     {
@@ -100,9 +108,7 @@ $(function () {
         $('#room-list').append("<a href='#' id='room"+i+"' room='"+link+"'>"+ data.rooms[i].name + " - " + data.rooms[i].whitePlayers + "vs"+ data.rooms[i].blackPlayers+"</a>");
         
         $('#room'+i).click(function() {
-          showNickname({'msg':'Choose your nickname:','room':link}, {
-            accept: joinLastClickedRoom
-          });
+          document.location = link;
         });
       }
     }
@@ -129,35 +135,57 @@ $(function () {
     $('#play').click();
   });
 
-  if(getName() !== null)
-  {
-    $('#nickname').val(getName());
-  }
+
 
   $('#play').click(function (ev) {
-    var nickname = $('#nickname');
-    $nickname = $('#nickname').val();
+    var roomName = $('#room-name').val();
 
-
-    if($nickname.length <= 1)
+   /* if(roomName.length <= 1)
     {
-      nickname.addClass('invalid');
-      setTimeout(function() { nickname.removeClass('invalid'); }, 1000)
+      console.log("Name of the room too small");
+      $('#room-name').addClass('invalid');
+      setTimeout(function() { $('#room-name').removeClass('invalid'); }, 1000)
       return false;
-    }
+    } */
 
-    // Set a cookie for the name
-    setName($nickname);
-
-    $time = 10;
     $increment = 0;
 
-    $socket.emit('start', {
-      'creatorName':$nickname,
-      'time':12
+    var turnTime = parseInt($('#turnTime').val());
+    
+    if(turnTime > maxTurnTime)
+    {
+      turnTime = maxTurnTime;
+    }
+    else if(turnTime < minTurnTime)
+    {
+      turnTime = minTurnTime;
+    }
+    else if(turnTime === null || turnTime == "" || turnTime === NaN)
+    {
+      turnTime = 10;
+    }
+
+    $time = turnTime;
+
+    $socket.emit('start', 
+    {
+      'creatorName': cleanInput(username),
+      'roomName': cleanInput(roomName),
+      'time': cleanInput(turnTime),
+      ''
     });
 
     $('#waiting').text('Generating game link').slideDown(400);
+
+
     ev.preventDefault();
+
+   
+
   });
+
+  function cleanInput(input)
+  {
+    return input;
+  }
 });

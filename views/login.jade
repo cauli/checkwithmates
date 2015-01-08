@@ -1,0 +1,23 @@
+extends layout
+
+block content
+  
+  // div.bg#loginBg
+
+
+
+  div#login-box
+    img(src="/images/logo_init.png")#logo_init(alt="Check with Mates")
+    - if(message && message.length > 0)
+      .button.fullwidth.warn=message
+    div#form
+      form#login_form(action='/login', method='post')
+        input.fullwidth.textinput#username(placeholder='username or email', maxlength='50', name='username')
+        input.fullwidth.textinput#password(placeholder='password', type='password', maxlength='50', name='password')
+        div.button.fullwidth#login-button(type='submit') log in
+        a.faded.right(href) forgot your password?
+        
+      a.button.inverted.fullwidth#create-account(href='/signup') create an account
+    
+block scripts
+  script(type='text/javascript', src='/javascripts/login.js')

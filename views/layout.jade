@@ -19,7 +19,7 @@ html
     meta(property='og:type', content='website')
     meta(property='og:url', content='http://checkwithmates.com/')
     meta(property='og:image', content='http://checkwithmates.com/images/OpenGraph.png')
-    meta(property='og:description', content='Check with Mates is a multiplayer chess variant.Help your team to achieve victory and have fun with your friends.')
+    meta(property='og:description', content='Check with Mates is a multiplayer chess variant. Help your team to achieve victory and have fun with your friends.')
 
     link(rel='shortcut icon', href='/images/logo.png')
     link(rel='stylesheet', href='/stylesheets/style.css')
@@ -30,7 +30,7 @@ html
     link(href='https://fonts.googleapis.com/css?family=Sorts+Mill+Goudy:400italic|Open+Sans:400,700,800', rel='stylesheet', type='text/css')
     //if IE
       script(src='http://html5shiv.googlecode.com/svn/trunk/html5.js')
-  body
+  body(class=typeof token === "undefined" ? undefined : "ingame")
     #modal-mask
       p
         strong Esc: 
@@ -67,7 +67,7 @@ html
         |  Change
       #nickname-window
         p#nickname-message Change my nickname to
-        input#nickname-inside(placeholder='insert nickname', maxlength='15')
+        input.textinput#nickname-inside(placeholder='insert nickname', maxlength='15')
         a#nickname-ok.button(href='#') Change
         a#nickname-cancel.button.button--red(href='#') Cancel
 
@@ -87,6 +87,7 @@ html
     #container_wrapper.clearfix
       #container.clearfix
         block content
+        
         
     include footer.jade
 
