@@ -171,8 +171,7 @@ $(function () {
     {
       'creatorName': cleanInput(username),
       'roomName': cleanInput(roomName),
-      'time': cleanInput(turnTime),
-      ''
+      'time': cleanInput(turnTime)
     });
 
     $('#waiting').text('Generating game link').slideDown(400);
