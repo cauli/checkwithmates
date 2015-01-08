@@ -308,7 +308,7 @@ label.main {
   z-index: -1; }
 
 .notification {
-  position: relative;
+  position: absolute;
   height: 20px;
   z-index: 10; }
 
