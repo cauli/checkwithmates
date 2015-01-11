@@ -11,15 +11,7 @@ block head
 block content
   div.bg#playBg
 
-  header.clearfix
-    div
-      a(href='/')
-        img(src="/images/logo_header.png")#logo_header
-      -if(username && username.length > 0)
-        span.nav Hi, 
-        a.nav.unpadleft(href='/profile/#{username}')=username
-      a.nav.right.padright(href='/logout') logout
-      //-a.nav.right(href='/lobby') lobby
+  include header.jade
 
   audio(id='moveSnd', preload='auto')
     source(src='/sounds/move.mp3')

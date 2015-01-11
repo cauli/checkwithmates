@@ -12,7 +12,8 @@ var express     = require('express')
   , ConnectionManager  = require('./config/ConnectionManager')
   , flash       = require('connect-flash')
   , bodyParser  = require('body-parser')
-  , mysql = require('mysql');
+  , mysql = require('mysql')
+  , User = require('./config/User');
 
 
 var app = express();
@@ -53,9 +54,11 @@ app.configure('development', function() {
 });
 
 app.get('/', isLoggedIn, function(req, res) {
-  var info =  req.flash('loginMessage');
-  console.log(info);
-  res.render('index', { message: "" +info + "", username: req.user.username });
+  User.getRatingByUser(req.user.username, function (rating){
+    var info =  req.flash('loginMessage');
+    console.log(info);
+    res.render('index', { message: "" +info + "", 'rating':rating, username: req.user.username });
+  });
 });
 
 app.get('/lobby', isLoggedIn, function(req, res) {
@@ -85,29 +88,6 @@ app.post('/forgot', function(req, res){
 
   forgot.forgot(email, req, res, 'forgot');
 });
-
-
-
-
-/*function forgotEmail(email) {
-  // TODO just a stub for email
-  var mailOptions = {
-      from: 'Check With Mates <checkwithmates@cau.li>', // sender address
-      to: email, 
-      subject: 'Reset your password', 
-      text: 'Hello from Check With Mates. It looks like you forgot your email. Please go to this link to reset it :  ', 
-      html: '<b>Hello from Check With Mates.</b>It looks like you forgot your email. Please go to this link to reset it : Didn\'t send this message? You can either ignore this message or cancel the account associated with this email'
-  };
-
-  // send mail with defined transport object
-  transporter.sendMail(mailOptions, function(error, info) {
-      if (error) {
-          console.log(error);
-      } else {
-          console.log('Message sent: ' + info.response);
-      }
-  });
-}*/
 
 
 // =====================================
@@ -160,9 +140,12 @@ app.post('/signup', passport.authenticate('local-signup', {
 // =====================================
 
 app.get('/profile/:name', isLoggedIn, function(req, res) {
-  res.render('profile', {
-    'name': cleanInput(req.params.name),
-    username: req.user.username });
+  User.getRatingByUser(req.user.username, function (rating){
+    res.render('profile', {
+      'name': cleanInput(req.params.name),
+      'rating': rating,
+      username: req.user.username });
+  });
 });
 
 function cleanInput(input)
@@ -233,10 +216,7 @@ if (process.env.PORT) {
   });
 }
 
-
-function forgotEmail() {
-
-}
+// User.setNewRating('cauli',2600,true);
 
 io.sockets.on('connection', function (socket) {
   

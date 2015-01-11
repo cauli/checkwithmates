@@ -619,6 +619,10 @@ ul#promotion-choices {
   margin-left: 27px;
   line-height: 0.7em; }
 
+.rating {
+  float: left;
+  margin-left: 2px; }
+
 .nav, .nav > a {
   color: #67D0B5 !important;
   font-size: 20px !important;

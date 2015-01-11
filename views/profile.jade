@@ -2,15 +2,7 @@ extends layout
 
 block content
 
-  header.clearfix
-    div
-      a(href='/')
-        img(src="/images/logo_header.png")#logo_header
-      -if(username && username.length > 0)
-        span.nav Hi, 
-        a.nav.unpadleft(href='/profile/#{username}')=username
-      a.nav.right.padright(href='/logout') logout
-      //-a.nav.right(href='/lobby') lobby
+  include header.jade
 
   h1#profile-name !{name}
 
@@ -30,10 +22,6 @@ block content
     li won ?
     li lost ?
     li draw ?
-   
-   
-
-
   
 block scripts
   script(type='text/javascript', src='/javascripts/start.js')

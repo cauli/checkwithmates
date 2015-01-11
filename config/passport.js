@@ -14,13 +14,6 @@ var bcrypt = require('bcrypt-nodejs');
 
 // expose this function to our app using module.exports
 module.exports = function(passport) {
-
-
-
-
-
-
-
     // =========================================================================
     // passport session setup ==================================================
     // =========================================================================
