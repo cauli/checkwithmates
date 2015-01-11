@@ -5,6 +5,6 @@ header.clearfix
       -if(username && username.length > 0)
         span.nav Hi,
         a.nav.unpadleft(href='/profile/#{username}')=username
-          -if(rating)
+        -if(rating)
           span.nav.rating , your rating is #{rating}
-        a.nav.right.padright(href='/logout') logout
+        a.nav.navright.padright(href='/logout') logout

@@ -2,7 +2,9 @@
 
 // load all the things we need
 var LocalStrategy   = require('passport-local').Strategy;
+
 var ConnectionManager = require('./ConnectionManager');
+var User = require('./User');
 var mysql = require('mysql');
 // load up the user model
 
@@ -28,7 +30,14 @@ module.exports = function(passport) {
     // used to deserialize the user
     passport.deserializeUser(function(id, done) {
         ConnectionManager.connection.query("select * from users where id = "+ id, function(err, rows){
-            done(err, rows[0]);
+            if (err)
+            {
+                return done(err);
+            }
+            if (rows.length) {
+                done(err, rows[0]);
+            }
+
         });
     });
 
@@ -83,12 +92,19 @@ module.exports = function(passport) {
 
                     console.log('!'+password+'!was hashed to ' +newUserMysql.password);
 
+
                     var insertQuery = "INSERT INTO users ( username, password, email ) values ('" + newUserMysql.username + "','" + newUserMysql.password +  "','" + newUserMysql.email + "')";
 
                     ConnectionManager.connection.query(insertQuery,function(err, rows) {
                         newUserMysql.id = rows.insertId;
-                        return done(null, newUserMysql);
+
+                        User.setDefaultRating(newUserMysql.username, function (rating) {
+                            return done(null, newUserMysql);
+                        });
+
                     });
+
+
                 }
             });
         })
@@ -122,7 +138,6 @@ module.exports = function(passport) {
 
                 console.log(bcrypt.compareSync(password, rows[0].password));
                 console.log( '!' + rows[0].password +  '! there password hashed ');
-                
 
 
                 // if the user is found but the password is wrong

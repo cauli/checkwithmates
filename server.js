@@ -154,12 +154,15 @@ function cleanInput(input)
 }
 
 app.get('/play/:token/:time/:increment/:session', isLoggedIn, function(req, res) {
-  res.render('play', {
-    'token': req.params.token,
-    'time': req.params.time,
-    'increment': req.params.increment,
-    'session': req.params.session,
-    'username': req.user.username
+  User.getRatingByUser(req.user.username, function (rating){
+    res.render('play', {
+      'token': req.params.token,
+      'time': req.params.time,
+      'increment': req.params.increment,
+      'session': req.params.session,
+      'username': req.user.username,
+      'rating': rating
+    });
   });
 });
 
@@ -749,23 +752,35 @@ io.sockets.on('connection', function (socket) {
 
     if (chess.game_over()) {
       var result = "";
+      var resultBoolean = 0; // 1 = white won, 0 = draw, -1 = black won
+      var victoryColor = 'none';
 
       if (chess.in_checkmate())
+      {
         result = chess.turn() === 'b' ? 'Checkmate. White wins!' : 'Checkmate. Black wins!'
-      else if (chess.in_draw())
+        resultBoolean = chess.turn() === 'b' ? 1 : -1;
+        victoryColor = chess.turn() === 'b' ? 'white' : 'black';
+      }
+      else if (chess.in_draw()) {
         result = "Draw.";
-      else if (chess.in_stalemate())
+      }
+      else if (chess.in_stalemate()) {
         result = "Stalemate.";
-      else if (chess.in_threefold_repetition())
+      }
+      else if (chess.in_threefold_repetition()) {
         result = "Draw. (Threefold Repetition)";
-      else if (chess.insufficient_material())
+      }
+      else if (chess.insufficient_material()) {
         result = "Draw. (Insufficient Material)";
+      }
       
       io.sockets.in(token).emit('finished-game', {
         'result': result
       });
 
       clearInterval(games[token].interval);
+
+      calculateNewRatings(token, victoryColor);
 
       //delete games[token];
     }
@@ -817,6 +832,8 @@ io.sockets.on('connection', function (socket) {
         'color': color
       });
 
+      calculateNewRatings(token, color);
+
       // Put WINNER or LOSER on "won" attribute
       for (var j in games[token].players) {
         if(color == games[token].players[j].color)
@@ -829,6 +846,8 @@ io.sockets.on('connection', function (socket) {
         }
       }
 
+
+
       // Send new player to all people.
       io.sockets.in(token).emit('receive-players', { 
         'players' : getCleanPlayers(token)
@@ -836,7 +855,7 @@ io.sockets.on('connection', function (socket) {
 
       clearInterval(games[token].interval);
 
-      delete games[token];
+      //delete games[token];
 
       /* This makes a random move. Really random move.
 
@@ -893,6 +912,74 @@ io.sockets.on('connection', function (socket) {
       return max.val;
   }
 
+  function getTeamAverageRating(color, token, callback)
+  {
+    var game = games[token];
+    var teamRatingArray = [];
+
+    game.blackPlayers = _.where(games[token].players, { 'color': 'black' } ).length;
+    game.whitePlayers = _.where(games[token].players, { 'color': 'white' } ).length;
+
+
+    var countPlayers = 0;
+
+    for (var j in game.players) {
+      var player = game.players[j];
+
+      if(player.color == color)
+      {
+        User.getRatingByUser(player.name, addToTeamRating);
+      }
+     }
+
+    function addToTeamRating(rating)
+    {
+      countPlayers++;
+
+      teamRatingArray.push(rating);
+
+      console.log("Pushing " + rating + " to teamRatingArray");
+
+      if(color == 'white')
+      {
+        if(countPlayers == game.blackPlayers) {
+          console.log("Average is " + average(teamRatingArray));
+          return callback(average(teamRatingArray), token);
+        }
+      }
+      else if(color == 'black')
+      {
+        if(countPlayers == game.whitePlayers) {
+          console.log("Average is " + average(teamRatingArray));
+          return callback(average(teamRatingArray), token);
+        }
+      }
+      else
+      {
+        console.error('Invalid color to average!')
+      }
+    }
+  }
+
+  function average(arr)
+  {
+    var sum = 0;
+
+    for( var i = 0; i < arr.length; i++ ){
+      sum += parseInt( arr[i], 10 ); //don't forget to add the base
+    }
+
+    if(arr.length > 0)
+    {
+      return sum/arr.length;
+    }
+    else
+    {
+      console.error("Cannot average empty array");
+      return 0;
+    }
+  }
+
   function getOpponent(token, socket) {
     var player, game = games[token];
 
@@ -917,6 +1004,63 @@ io.sockets.on('connection', function (socket) {
     else
     {
       return 'white';
+    }
+  }
+
+  function calculateNewRatings(token, victoryColor)
+  {
+    getTeamAverageRating('white', token, finishedAverageWhite);
+    getTeamAverageRating('black', token, finishedAverageBlack);
+
+    var finished = 0;
+    var aW;
+    var aB;
+
+    // TODO Solve this elegantly with promises
+    function finishedAverageWhite(averageWhite, token) {
+      finished++;
+      aW = averageWhite;
+
+      if(finished == 2)
+      {
+        gotAverages(aW,aB, token);
+      }
+    }
+
+    function finishedAverageBlack(averageBlack, token) {
+      finished++;
+      aB = averageBlack;
+
+      if(finished == 2)
+      {
+        gotAverages(aW,aB, token);
+      }
+    }
+
+    function gotAverages(averageWhite, averageBlack, token)
+    {
+      console.log("Average team rating for white is " + averageWhite);
+      console.log("Average team rating for black is " + averageBlack);
+
+      // Put WINNER or LOSER on "won" attribute
+      for (var j in games[token].players) {
+        var playerColor = games[token].players[j].color;
+
+        if(victoryColor == 'none')
+        {
+          User.setNewRating(games[token].players[j].name, playerColor == 'white' ? averageBlack : averageWhite, 0.5);
+        }
+        else if(playerColor == victoryColor)
+        {
+          games[token].players[j].won = 1;
+          User.setNewRating(games[token].players[j].name, playerColor == 'white' ? averageBlack : averageWhite, 1);
+        }
+        else
+        {
+          games[token].players[j].won = -1;
+          User.setNewRating(games[token].players[j].name, playerColor == 'white' ? averageBlack : averageWhite, 0);
+        }
+      }
     }
   }
 });
