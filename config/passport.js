@@ -2,46 +2,24 @@
 
 // load all the things we need
 var LocalStrategy   = require('passport-local').Strategy;
-
-// load up the user model
+var ConnectionManager = require('./ConnectionManager');
 var mysql = require('mysql');
+// load up the user model
+
 var bcrypt = require('bcrypt-nodejs');
-var dbconfig = require('./database');
-var connection = mysql.createConnection(dbconfig.connection);
 
-connection.query('USE ' + dbconfig.database);
 
-function handleDisconnect() {
-  connection = mysql.createConnection(dbconfig.connection); // Recreate the connection, since
-                                                            // the old one cannot be reused.
 
-  connection.connect(function(err) {              // The server is either down
-    if(err) {                                     // or restarting (takes a while sometimes).
-      console.log('error when connecting to db:', err);
-      setTimeout(handleDisconnect, 2000); // We introduce a delay before attempting to reconnect,
-    }       
-    else
-    {
-      connection.query('USE ' + dbconfig.database);
-    }                              // to avoid a hot loop, and to allow our node script to
-  });                                     // process asynchronous requests in the meantime.
-                                          // If you're also serving http, display a 503 error.
-  connection.on('error', function(err) {
-    console.log('db error', err);
-    if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
-      handleDisconnect();                         // lost due to either server restart, or a
-    } else {  
-      handleDisconnect(); 
-      console.log(err.code + ' - err.code');      // connnection idle timeout (the wait_timeout
-      throw err;                                  // server variable configures this)
-    }
-  });
-}
 
-handleDisconnect();
 
 // expose this function to our app using module.exports
 module.exports = function(passport) {
+
+
+
+
+
+
 
     // =========================================================================
     // passport session setup ==================================================
@@ -56,7 +34,7 @@ module.exports = function(passport) {
 
     // used to deserialize the user
     passport.deserializeUser(function(id, done) {
-        connection.query("select * from users where id = "+ id, function(err, rows){
+        ConnectionManager.connection.query("select * from users where id = "+ id, function(err, rows){
             done(err, rows[0]);
         });
     });
@@ -95,7 +73,7 @@ module.exports = function(passport) {
 
             // find a user whose email is the same as the forms email
             // we are checking to see if the user trying to login already exists
-            connection.query("select * from users where username = '" + username + "' or email = '"+email+"'", function(err, rows) {
+            ConnectionManager.connection.query("select * from users where username = '" + username + "' or email = '"+email+"'", function(err, rows) {
                 if (err)
                     return done(err);
                 if (rows.length) {
@@ -114,7 +92,7 @@ module.exports = function(passport) {
 
                     var insertQuery = "INSERT INTO users ( username, password, email ) values ('" + newUserMysql.username + "','" + newUserMysql.password +  "','" + newUserMysql.email + "')";
 
-                    connection.query(insertQuery,function(err, rows) {
+                    ConnectionManager.connection.query(insertQuery,function(err, rows) {
                         newUserMysql.id = rows.insertId;
                         return done(null, newUserMysql);
                     });
@@ -141,7 +119,7 @@ module.exports = function(passport) {
             console.log("passport logging in");
 
             console.log("trying to login " + username + ' password !' + password+ '!');
-            connection.query("select * from users where username = '" + username + "' OR email = '" + username +"'",function(err, rows){
+            ConnectionManager.connection.query("select * from users where username = '" + username + "' OR email = '" + username +"'",function(err, rows){
                 if (err)
                     return done(err);
                 if (!rows.length) {

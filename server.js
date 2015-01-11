@@ -7,13 +7,12 @@ var express     = require('express')
   , _           = require('lodash')
   , ch          = require('./chess')
   , passport    = require('passport')
+  , forgot    = require('./config/forgot')
   , dbconfig    = require('./config/database')
-  , emailconfig = require('./config/email')
+  , ConnectionManager  = require('./config/ConnectionManager')
   , flash       = require('connect-flash')
   , bodyParser  = require('body-parser')
-  , nodemailer  = require('nodemailer');
-
-var transporter = nodemailer.createTransport(emailconfig);
+  , mysql = require('mysql');
 
 
 var app = express();
@@ -82,10 +81,13 @@ app.get('/forgot', function(req, res) {
 });
 
 app.post('/forgot', function(req, res){    
+  var email = req.body.email;
 
-    var email = req.body.email;
-    console.log("Requested forgot for email");
+  forgot.forgot(email, req, res, 'forgot');
 });
+
+
+
 
 /*function forgotEmail(email) {
   // TODO just a stub for email

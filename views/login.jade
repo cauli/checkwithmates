@@ -1,10 +1,6 @@
 extends layout
 
 block content
-  
-  // div.bg#loginBg
-
-
 
   div#login-box
     img(src="/images/logo_init.png")#logo_init(alt="Check with Mates")
@@ -15,7 +11,7 @@ block content
         input.fullwidth.textinput#username(placeholder='username or email', maxlength='50', name='username')
         input.fullwidth.textinput#password(placeholder='password', type='password', maxlength='50', name='password')
         div.button.fullwidth#login-button(type='submit') log in
-        a.faded.right(href) forgot your password?
+        a.faded.right(href='/forgot') forgot your password?
         
       a.button.inverted.fullwidth#create-account(href='/signup') create an account
     

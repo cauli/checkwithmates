@@ -163,14 +163,33 @@ input.radio
 
 span.medium
 {
-  font-family: 'Sorts Mill', serif;
+  font-family: 'Sorts Mill Goudy', serif;
   font-size: 18px;
   color: $green;
   line-height: 43px;
-  font-style:italic;
+
   float:left;
+}
+
+#forgot-message {
+  display: inline-block;
+  margin-top:-20px;
+  margin-bottom:20px;
+}
+.cursive
+{
+  font-family: 'Sorts Mill Goudy', serif;
+  color: $green;
+  font-style:italic;
+}
+
+.bigger
+{
+  font-size: 24px;
+  line-height: 38px;
 
 }
+
 label.radio
 {
   margin-top: -16px;
@@ -243,7 +262,7 @@ input[type=radio] {
 }  
 
 label.main{
-  font-family: 'Sorts Mill', serif;
+  font-family: 'Sorts Mill Goudy', serif;
   font-size: 18px;
   color: $green;
   line-height: 26px;
@@ -1002,7 +1021,7 @@ input, button{
 h5
 {
   text-align:center;
-  font-family: 'Sorts Mill', serif;
+  font-family: 'Sorts Mill Goudy', serif;
   font-style: italic;
   font-size: 13px;
   color: #6ADAB8;
@@ -1016,7 +1035,7 @@ h5
 {
   text-align: center;
   opacity: 0.35;
-  font-family: 'Sorts Mill', serif;
+  font-family: 'Sorts Mill Goudy', serif;
   font-style: italic;
   font-size: 13px;
   color: $green;
@@ -1523,7 +1542,7 @@ span.promotion{
   overflow: hidden;
 }
 
-#login-box, #signup-box
+#login-box, #signup-box, #forgot-box
 {
   width: 238px;
   margin: 10% auto;

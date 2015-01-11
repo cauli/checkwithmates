@@ -115,12 +115,25 @@ input.radio {
   margin-top: 20px; }
 
 span.medium {
-  font-family: 'Sorts Mill', serif;
+  font-family: 'Sorts Mill Goudy', serif;
   font-size: 18px;
   color: #67D0B5;
   line-height: 43px;
-  font-style: italic;
   float: left; }
+
+#forgot-message {
+  display: inline-block;
+  margin-top: -20px;
+  margin-bottom: 20px; }
+
+.cursive {
+  font-family: 'Sorts Mill Goudy', serif;
+  color: #67D0B5;
+  font-style: italic; }
+
+.bigger {
+  font-size: 24px;
+  line-height: 38px; }
 
 label.radio {
   margin-top: -16px;
@@ -177,7 +190,7 @@ input[type=radio] {
   display: none; }
 
 label.main {
-  font-family: 'Sorts Mill', serif;
+  font-family: 'Sorts Mill Goudy', serif;
   font-size: 18px;
   color: #67D0B5;
   line-height: 26px;
@@ -788,7 +801,7 @@ input, button {
 
 h5 {
   text-align: center;
-  font-family: 'Sorts Mill', serif;
+  font-family: 'Sorts Mill Goudy', serif;
   font-style: italic;
   font-size: 13px;
   color: #6ADAB8;
@@ -800,7 +813,7 @@ h5 {
 .faded {
   text-align: center;
   opacity: 0.35;
-  font-family: 'Sorts Mill', serif;
+  font-family: 'Sorts Mill Goudy', serif;
   font-style: italic;
   font-size: 13px;
   color: #67D0B5;
@@ -1223,7 +1236,7 @@ span.promotion {
   display: block;
   overflow: hidden; }
 
-#login-box, #signup-box {
+#login-box, #signup-box, #forgot-box {
   width: 238px;
   margin: 10% auto; }
 

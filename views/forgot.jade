@@ -1,0 +1,17 @@
+extends layout
+
+block content
+
+  div#forgot-box
+    img(src="/images/logo_init.png")#logo_init(alt="Check with Mates")
+    span.cursive.bigger#forgot-message forgot your password?
+    - if(message && message.length > 0)
+      .button.fullwidth.warn=message
+    div#form
+      form#forgot_form(action='/forgot', method='post')
+        input.fullwidth.textinput#email(placeholder='username or email', maxlength='50', name='email')
+        div.button.fullwidth#forgot-button(type='submit') send reset link
+        a.faded.right(href='/') actually, I remember my password
+    
+block scripts
+  script(type='text/javascript', src='/javascripts/forgot.js')
