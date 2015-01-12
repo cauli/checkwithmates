@@ -2,10 +2,29 @@
 var dbconfig    = require('./database');
 var mysql = require('mysql');
 
-exports.connection = mysql.createConnection(dbconfig.connection);
+
+exports.pool = mysql.createPool(dbconfig.connection);
+
+exports.pool.on('enqueue', function () {
+    console.log('Waiting for available connection slot');
+});
+
+exports.pool.on('connection', function (connection) {
+    connection.query('USE ' + dbconfig.database);
+});
+
+/*exports.connection = mysql.createConnection(dbconfig.connection);
 var connection = exports.connection;
 
-connection.query('USE ' + dbconfig.database);
+connection.query('USE ' + dbconfig.database);*/
+
+
+/*
+pool.query('SELECT 1 + 1 AS solution', function(err, rows, fields) {
+    if (err) throw err;
+
+    console.log('The solution is: ', rows[0].solution);
+});
 
 function handleDisconnect() {
     connection = mysql.createConnection(dbconfig.connection); // Recreate the connection, since
@@ -34,4 +53,4 @@ function handleDisconnect() {
     });
 }
 
-handleDisconnect();
+handleDisconnect();*/
