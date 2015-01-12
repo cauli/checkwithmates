@@ -1,7 +1,7 @@
 // config/database.js
 module.exports = {
     'connection': {
-        'connectionLimit': 10,
+        'connectionLimit': 100,
         'host': 'mysql.cauli.kinghost.net',
         'user': 'cauli02',
         'password': 'pfft6vol'

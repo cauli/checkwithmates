@@ -1094,6 +1094,7 @@ ul#chat {
 
 /* Captured pieces */
 #captured-pieces {
+  display: none;
   position: absolute;
   width: 100px;
   margin-left: -100px;

@@ -773,7 +773,11 @@ io.sockets.on('connection', function (socket) {
       else if (chess.insufficient_material()) {
         result = "Draw. (Insufficient Material)";
       }
-      
+
+      io.sockets.in(token).emit('receive-players', {
+        'players' : getCleanPlayers(token)
+      });
+
       io.sockets.in(token).emit('finished-game', {
         'result': result
       });
@@ -827,10 +831,12 @@ io.sockets.on('connection', function (socket) {
     // Não existe voto, o computador vai fazer uma jogada aleatória
     else
     {
-      /* Send lost message to all */
-      io.sockets.in(token).emit('lost-game', {
+      /*
+       Depreacted: Use finished-game instead
+       */
+     /* io.sockets.in(token).emit('lost-game', {
         'color': color
-      });
+      });*/
 
       calculateNewRatings(token, color);
 
@@ -846,11 +852,20 @@ io.sockets.on('connection', function (socket) {
         }
       }
 
+      var result = "White didn't play and lost the game";
 
+      if(color == 'black')
+      {
+        result = "Black didn't play and lost the game";
+      }
 
       // Send new player to all people.
       io.sockets.in(token).emit('receive-players', { 
         'players' : getCleanPlayers(token)
+      });
+
+      io.sockets.in(token).emit('finished-game', {
+        'result': result
       });
 
       clearInterval(games[token].interval);

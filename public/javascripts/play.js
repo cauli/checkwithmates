@@ -726,24 +726,18 @@ $(function() {
    
   });
 
+  /*
   $socket.on('lost-game', function (data) {
     console.log(data.color + " lost the game");
-    // TO-DO One opponent disconnected
 
-    /* $('.resign').off().remove(); */
-    
-
-    /* $('.sendMessage').off();
-    $('.sendMessage').submit(function (e) {
-      e.preventDefault();
-      showModal(data.color + " lost the gam");
-    });*/
     var team = data.color.charAt(0).toUpperCase() + data.color.substring(1);
 
     if (!$gameOver) {
-      showModal(team + " didn't play and lost the game!");
+      showModal(data.result);
     }
-  });
+  });*/
+
+
   $socket.on('opponent-disconnected', function (data) {
     console.log("One opponent disconnected");
     // TO-DO One opponent disconnected
@@ -896,6 +890,7 @@ $(function() {
     }
   });
 
+  /* Timer countdown */
   $socket.on('countdown', function (data) {
     var color = data.color;
     var opp_color = color === 'black' ? 'white' : 'black';
