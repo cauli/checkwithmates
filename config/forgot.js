@@ -8,6 +8,9 @@ var transporter = nodemailer.createTransport(emailconfig);
 exports.forgot = function(username, req, res, redirectTo) {
     ConnectionManager.pool.getConnection(function (err, connection) {
         connection.query("select * from users where username = '" + username + "' OR email = '" + username + "'", function (err, rows) {
+
+            connection.release();
+
             if (err)
                 return req.flash('forgotMessage', 'Unknown server error');
             if (!rows.length) {

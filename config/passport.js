@@ -36,6 +36,9 @@ module.exports = function(passport) {
             }
 
             connection.query("select * from users where id = " + id, function (err, rows) {
+
+                connection.release();
+
                 if (err) {
                     return done(err);
                 }
@@ -82,6 +85,9 @@ module.exports = function(passport) {
             // we are checking to see if the user trying to login already exists
             ConnectionManager.pool.getConnection(function(err,connection) {
                 connection.query("select * from users where username = '" + username + "' or email = '" + email + "'", function (err, rows) {
+
+                    connection.release();
+
                     if (err)
                         return done(err);
                     if (rows.length) {
@@ -103,6 +109,9 @@ module.exports = function(passport) {
 
                         ConnectionManager.pool.getConnection(function(err,connection) {
                             connection.query(insertQuery, function (err, rows) {
+
+                                connection.release();
+
                                 newUserMysql.id = rows.insertId;
 
                                 User.setDefaultRating(newUserMysql.username, function (rating) {
@@ -136,6 +145,9 @@ module.exports = function(passport) {
             console.log("trying to login " + username + ' password !' + password+ '!');
             ConnectionManager.pool.getConnection(function(err,connection) {
                 connection.query("select * from users where username = '" + username + "' OR email = '" + username +"'",function(err, rows){
+
+                    connection.release();
+
                     if (err)
                         return done(err);
                     if (!rows.length) {

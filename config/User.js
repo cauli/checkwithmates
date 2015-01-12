@@ -12,6 +12,9 @@ exports.setDefaultRating = function (username, callback) {
     _this.getId(username, function(id) {;
         ConnectionManager.pool.getConnection(function(err,connection){
             connection.query("INSERT INTO rating (id,rating) VALUES ("+id+","+defaultRating+")",function(err, rows){
+
+                connection.release();
+
                 if (err) {
                     console.log("Unable to set default rating for " + username + " error: " + err);
                     return false;
@@ -48,6 +51,9 @@ exports.setNewRating = function (username, opponentRating, result) {
 
             ConnectionManager.pool.getConnection(function(err,connection){
                 connection.query("INSERT INTO rating (id,rating) VALUES ("+id+","+newPlayerRating+")",function(err, rows){
+
+                    connection.release();
+
                     if (err) {
                         console.log("Unable to set new rating for " + username + " error: " + err);
                         return false;
@@ -63,6 +69,9 @@ exports.setNewRating = function (username, opponentRating, result) {
 exports.getId = function (username, callback) {
     ConnectionManager.pool.getConnection(function(err,connection){
         connection.query("select id from users where username = '" + username + "' OR email = '" + username +"'",function(err, rows){
+
+            connection.release();
+
             if (err)
             {
                 console.log("Unable to get ID for " + username);
@@ -83,6 +92,9 @@ exports.getId = function (username, callback) {
 exports.getUsername = function (id, callback) {
     ConnectionManager.pool.getConnection(function(err,connection){
         connection.query("select username from users where id = " + id + "'",function(err, rows){
+
+            connection.release();
+
             if (err)
             {
                 console.log("Unable to get username for " + id);
@@ -103,6 +115,9 @@ exports.getUsername = function (id, callback) {
 exports.getRatingById = function (id, callback) {
     ConnectionManager.pool.getConnection(function(err,connection){
         connection.query("select * from rating where id = " + id + " ORDER BY timestamp DESC LIMIT 1",function(err, rows){
+
+            connection.release();
+
             if (err)
             {
                 console.log("Unable to get rating (getRatingById) for " + id + " error : " + err);
@@ -129,6 +144,9 @@ exports.getRatingByUser = function (username, callback) {
     this.getId(username, function(id) {
         ConnectionManager.pool.getConnection(function(err,connection){
             connection.query("select * from rating where id = " + id + " ORDER BY timestamp DESC LIMIT 1",function(err, rows){
+
+                connection.release();
+
                 if (err)
                 {
                     console.log("Unable to get rating (getRatingByUser) for " + id + " error : " + err);
