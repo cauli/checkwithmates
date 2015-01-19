@@ -6,8 +6,11 @@ block content
 
   h1#profile-name !{name}
 
-  p.info sorry, we are still creating this page.
-  
+  div.ct-chart
+
+
+
+
   ul games summary
     li won ?
     li lost ?
@@ -24,5 +27,9 @@ block content
     li draw ?
   
 block scripts
+  script.
+    name = '#{name}'
   script(type='text/javascript', src='/javascripts/start.js')
   script(type='text/javascript', src='/javascripts/nickname.js')
+  script(type = 'text/javascript', src = '/bower_components/chartist/dist/chartist.js')
+  script(type='text/javascript', src='/javascripts/charts.js')

@@ -28,7 +28,7 @@ exports.setDefaultRating = function (username, callback) {
     });
 }
 
-exports.setNewRating = function (username, opponentRating, result) {
+exports.setNewRating = function (username, opponentRating, result, gameId) {
 
     var _this = this;
 
@@ -50,7 +50,7 @@ exports.setNewRating = function (username, opponentRating, result) {
 
 
             ConnectionManager.pool.getConnection(function(err,connection){
-                connection.query("INSERT INTO rating (id,rating) VALUES ("+id+","+newPlayerRating+")",function(err, rows){
+                connection.query("INSERT INTO rating (id,rating,game_id) VALUES ("+id+","+newPlayerRating+","+gameId+")",function(err, rows){
 
                     connection.release();
 
@@ -140,6 +140,91 @@ exports.getRatingById = function (id, callback) {
     });
 }
 
+exports.setUserPlayed = function(username, info, callback) {
+    this.getId(username, function(userId) {
+        ConnectionManager.pool.getConnection(function(err,connection) {
+            connection.query("insert into user_played (user_id, game_id, accepted_moves, rejected_moves, nonplayed_moves, color,admin, game_result, player_result) VALUES (" + userId + "," + info.game_id + ",0,0,0,'" + info.color + "','" + info.admin + "'," + info.result + ","+ info.player_result+")", function (err, rows) {
+                connection.release();
+
+                if (err) {
+                    console.log("Unable to setUserPlayed: " + err);
+                    return false;
+                }
+
+                return callback("ok");
+            });
+        });
+    });
+}
+
+
+exports.getGameResultsHistory = function(username, callback) {
+    this.getId(username, function(id) {
+        ConnectionManager.pool.getConnection(function(err,connection){
+            connection.query("select * from user_played where id = " + id + " ORDER BY timestamp ASC LIMIT 150",function(err, rows){
+
+                connection.release();
+
+                var history = [];
+
+                if (err)
+                {
+                    console.log("Unable to get rating history (getRatingHistory) for " + id + " error : " + err);
+                    return false;
+                }
+
+                if (!rows.length) {
+                    console.log("Rating History for " + id + " not found");
+
+                }
+                else
+                {
+                    for(var i=0; i<rows.length; i++)
+                    {
+                        history.push(rows[i].rating.toString());
+                    }
+                }
+
+                return callback(history);
+            });
+        });
+    });
+}
+
+/* Gets latest 150 ratings of user */
+exports.getRatingHistory = function (username, callback) {
+    this.getId(username, function(id) {
+        ConnectionManager.pool.getConnection(function(err,connection){
+            connection.query("select * from rating where id = " + id + " ORDER BY timestamp ASC LIMIT 150",function(err, rows){
+
+                connection.release();
+
+                var history = [];
+
+                if (err)
+                {
+                    console.log("Unable to get rating history (getRatingHistory) for " + id + " error : " + err);
+                    return false;
+                }
+
+                if (!rows.length) {
+                    console.log("Rating History for " + id + " not found");
+
+                }
+                else
+                {
+                    for(var i=0; i<rows.length; i++)
+                    {
+                        history.push(rows[i].rating.toString());
+                    }
+                }
+
+                return callback(history);
+            });
+        });
+    });
+}
+
 exports.getRatingByUser = function (username, callback) {
     this.getId(username, function(id) {
         ConnectionManager.pool.getConnection(function(err,connection){
@@ -169,3 +254,5 @@ exports.getRatingByUser = function (username, callback) {
         });
     });
 }
+
+

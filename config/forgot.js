@@ -36,7 +36,10 @@ exports.forgot = function(username, req, res, redirectTo) {
                 if (error) {
                     req.flash('forgotMessage', 'There was an error sending the email')
 
-                    console.log(error);
+                    console.error('error sending email : ' + error);
+                    res.render(redirectTo, {message: req.flash('forgotMessage')});
+                    res.end();
+
                 } else {
                     console.log('Message sent: ' + info.response);
                 }

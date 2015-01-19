@@ -13,7 +13,8 @@ var express     = require('express')
   , flash       = require('connect-flash')
   , bodyParser  = require('body-parser')
   , mysql = require('mysql')
-  , User = require('./config/User');
+  , User = require('./config/User')
+  , GamePersist = require('./config/GamePersist');
 
 
 var app = express();
@@ -52,6 +53,13 @@ require('./config/passport')(passport); // pass passport for configuration
 app.configure('development', function() {
   app.use(express.errorHandler());
 });
+
+
+
+
+
+
+
 
 app.get('/', isLoggedIn, function(req, res) {
   User.getRatingByUser(req.user.username, function (rating){
@@ -138,6 +146,15 @@ app.post('/signup', passport.authenticate('local-signup', {
 // =====================================
 // PROFILE =============================
 // =====================================
+
+
+app.get('/profile/:name/rating', isLoggedIn, function(req, res) {
+  User.getRatingHistory(req.params.name, function (ratingHistory){
+    res.header('Content-type','application/json');
+    res.header('Charset','utf8');
+    res.send(JSON.stringify(ratingHistory));
+  });
+});
 
 app.get('/profile/:name', isLoggedIn, function(req, res) {
   User.getRatingByUser(req.user.username, function (rating){
@@ -268,7 +285,8 @@ io.sockets.on('connection', function (socket) {
       'token' : token.toString(),
       'hasAdmin' : false,
       'whitePlayers' : 0,
-      'blackPlayers' : 0
+      'blackPlayers' : 0,
+      'createdOn' : Date.now() / 1000 | 0
     };
 
     games[token].moves = [];
@@ -729,6 +747,64 @@ io.sockets.on('connection', function (socket) {
     }
   }
 
+  function persistGameInfo(token,  result, resultBoolean)
+  {
+
+
+    var chess = new ch.Chess();
+
+    for(var i=0; i<games[token].moves.length; i++)
+    {
+      chess.move(games[token].moves[i].san);
+    }
+
+    var gameInfo = {
+      'result': resultBoolean,
+      'termination': result,
+      'fen': chess.fen(),
+      'mode': 'normal',
+      'created_on': games[token].createdOn ,
+      'pgn': chess.pgn()
+    }
+
+    GamePersist.setGame(gameInfo, function (idOfTheGameOnTheDatabase) {
+      // Jogadores não jogaram então time perdeu
+
+      calculateNewRatings(token, result, idOfTheGameOnTheDatabase);
+
+
+      for(var i = 0 ; i < games[token].players.length ; i++ ){
+        var booleanColor = games[token].players[i].color == 'white' ? 1 : -1;
+
+        var player_result = 0;
+
+        if(gameInfo.result == 0)
+        {
+          player_result = 0;
+        }
+        else if(booleanColor == gameInfo.result)
+        {
+          player_result = 1;
+        }
+        else
+        {
+          player_result = -1;
+        }
+
+        var info = {
+          'admin'  : games[token].players[i].admin,
+          'color'  : games[token].players[i].color,
+          'result' : resultBoolean,
+          'name'   : games[token].players[i].name,
+          'game_id': idOfTheGameOnTheDatabase,
+          'player_result' : player_result
+        }
+
+        User.setUserPlayed(games[token].players[i].name, info, function () { console.log("Ok, inserted user to user_played")})
+      }
+    })
+  }
+
   function checkForFinishedGame(token)
   {
     var chess = new ch.Chess();
@@ -763,16 +839,23 @@ io.sockets.on('connection', function (socket) {
       }
       else if (chess.in_draw()) {
         result = "Draw.";
+        resultBoolean = 0;
+
       }
       else if (chess.in_stalemate()) {
         result = "Stalemate.";
+        resultBoolean = 0;
       }
       else if (chess.in_threefold_repetition()) {
         result = "Draw. (Threefold Repetition)";
+        resultBoolean = 0;
       }
       else if (chess.insufficient_material()) {
         result = "Draw. (Insufficient Material)";
+        resultBoolean = 0;
       }
+
+      persistGameInfo(token, result, resultBoolean);
 
       io.sockets.in(token).emit('receive-players', {
         'players' : getCleanPlayers(token)
@@ -831,14 +914,7 @@ io.sockets.on('connection', function (socket) {
     // Não existe voto, o computador vai fazer uma jogada aleatória
     else
     {
-      /*
-       Depreacted: Use finished-game instead
-       */
-     /* io.sockets.in(token).emit('lost-game', {
-        'color': color
-      });*/
 
-      calculateNewRatings(token, color);
 
       // Put WINNER or LOSER on "won" attribute
       for (var j in games[token].players) {
@@ -852,12 +928,16 @@ io.sockets.on('connection', function (socket) {
         }
       }
 
-      var result = "White didn't play and lost the game";
+      var result = "White did not play and lost the game";
+      var resultBoolean = -1;
 
       if(color == 'black')
       {
-        result = "Black didn't play and lost the game";
+        result = "Black did not play and lost the game";
+        resultBoolean = 1;
       }
+
+      persistGameInfo(token, result, resultBoolean);
 
       // Send new player to all people.
       io.sockets.in(token).emit('receive-players', { 
@@ -1022,8 +1102,19 @@ io.sockets.on('connection', function (socket) {
     }
   }
 
-  function calculateNewRatings(token, victoryColor)
+  function calculateNewRatings(token, result, gameId)
   {
+    var victoryColor = "none";
+
+    if(result == 1)
+    {
+      victoryColor = "white";
+    }
+    else
+    {
+      victoryColor = "black";
+    }
+
     getTeamAverageRating('white', token, finishedAverageWhite);
     getTeamAverageRating('black', token, finishedAverageBlack);
 
@@ -1063,17 +1154,17 @@ io.sockets.on('connection', function (socket) {
 
         if(victoryColor == 'none')
         {
-          User.setNewRating(games[token].players[j].name, playerColor == 'white' ? averageBlack : averageWhite, 0.5);
+          User.setNewRating(games[token].players[j].name, playerColor == 'white' ? averageBlack : averageWhite, 0.5, gameId);
         }
         else if(playerColor == victoryColor)
         {
           games[token].players[j].won = 1;
-          User.setNewRating(games[token].players[j].name, playerColor == 'white' ? averageBlack : averageWhite, 1);
+          User.setNewRating(games[token].players[j].name, playerColor == 'white' ? averageBlack : averageWhite, 1, gameId);
         }
         else
         {
           games[token].players[j].won = -1;
-          User.setNewRating(games[token].players[j].name, playerColor == 'white' ? averageBlack : averageWhite, 0);
+          User.setNewRating(games[token].players[j].name, playerColor == 'white' ? averageBlack : averageWhite, 0, gameId);
         }
       }
     }
