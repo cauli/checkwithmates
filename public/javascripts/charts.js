@@ -81,7 +81,7 @@ $( document ).ready(function() {
         url: $URL + '/profile/'+name+'/results',
         success: function(data) {
 
-            if(data.all.won == 0 && data.all.won == 0 && data.all.won == 0)
+            if(data.all.won == 0 && data.all.lost == 0 && data.all.drawn == 0)
             {
                 new Chartist.Pie('#left-chart.ct-chart', {
                   labels: ['' + data.all.won, '' + data.all.lost, ''+data.all.drawn],
@@ -96,7 +96,7 @@ $( document ).ready(function() {
                 }, donutOptions);
             }
       
-            if(data.white.won == 0 && data.white.won == 0 && data.white.won == 0)
+            if(data.white.won == 0 && data.white.lost == 0 && data.white.drawn == 0)
             {
                 new Chartist.Pie('#middle-chart.ct-chart', {
                   labels: ['' + data.white.won, '' + data.white.lost, '' + data.white.drawn],
@@ -111,7 +111,7 @@ $( document ).ready(function() {
                 }, donutOptions);
             }
 
-            if(data.black.won == 0 && data.black.won == 0 && data.black.won == 0)
+            if(data.black.won == 0 && data.black.lost == 0 && data.black.drawn == 0)
             {
                 new Chartist.Pie('#right-chart.ct-chart', {
                   labels: ['' +data.black.won, '' +data.black.lost , '' + data.black.drawn],
