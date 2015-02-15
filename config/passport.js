@@ -56,7 +56,7 @@ module.exports = function(passport) {
     passport.use(new FacebookStrategy({
         clientID: "1519137431693479",
         clientSecret: "aca75efcc56b7b0abc9dbb49c81d3bf9",
-        callbackURL: "http://www.checkwithmates.com/auth/facebook/callback" //"http://www.checkwithmates.com/auth/facebook/callback"
+        callbackURL: "http://checkwithmates.com/auth/facebook/callback" //"http://www.checkwithmates.com/auth/facebook/callback"
       },
       function(accessToken, refreshToken, profile, done) {
         console.dir(profile);
