@@ -108,6 +108,11 @@ app.get('/login', function(req, res) {
   res.render('login', { message: "" +info + "" });
 });
 
+app.get('/error', function(req, res){
+  console.log("Authentication error");
+  res.render('login', { message: "Authentication error" });
+});
+
 app.post('/login', passport.authenticate('local-login', {
   successRedirect : '/', // redirect to the secure profile section
   failureRedirect : '/login', // redirect back to the login page if there is an error
@@ -208,10 +213,17 @@ function isLoggedIn(req, res, next) {
 
   // if user is authenticated in the session, carry on
   if (req.isAuthenticated())
-    return next();
+  {
+    console.log("========== User authenticated")
+    return next(null);
+  }
+  else
+  {
+    console.log("========== User not authenticated")
+  }
 
   // if they aren't redirect them to the home page
-  res.redirect('/login');
+  res.redirect('/error');
 }
 
 app.get('/logs', function(req, res) {
