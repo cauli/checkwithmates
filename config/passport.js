@@ -1,7 +1,8 @@
 // config/passport.js
 
 // load all the things we need
-var LocalStrategy   = require('passport-local').Strategy;
+var LocalStrategy   = require('passport-local').Strategy,
+    FacebookStrategy = require('passport-facebook').Strategy;
 
 var ConnectionManager = require('./ConnectionManager');
 var User = require('./User');
@@ -48,6 +49,74 @@ module.exports = function(passport) {
             });
         });
     });
+
+    // =========================================================================
+    // FACEBOOK LOGIN ==========================================================
+    // =========================================================================
+    passport.use(new FacebookStrategy({
+        clientID: "1519137431693479",
+        clientSecret: "aca75efcc56b7b0abc9dbb49c81d3bf9",
+        callbackURL: "http://www.checkwithmates.com/auth/facebook/callback"
+      },
+      function(accessToken, refreshToken, profile, done) {
+        console.dir(profile);
+
+        var id = profile.id;
+        var name = profile.displayName;
+        var gender = profile.gender;
+
+        var fbUser = {
+            fb_id: id,
+            username: name,
+            name: name,
+            gender: gender,
+            password: null
+        };
+
+        ConnectionManager.pool.getConnection(function(err,connection) {
+                connection.query("select * from users where fb_id = '" + id + "'", function (err, rows) {
+
+                    connection.release();
+
+                    if (err)
+                        return done(err);
+                    if (rows.length) {
+                        console.log("Login message: fb_id already exists");
+
+                        fbUser.id = rows[0].id;
+                        return done(null, fbUser);
+                    } else {
+                        var insertQuery = "INSERT INTO users ( fb_id, gender, name, username ) values ('" + fbUser.fb_id + "','" + fbUser.gender + "','" + fbUser.name +  "','" + fbUser.username  +"')";
+
+                        ConnectionManager.pool.getConnection(function(err,connection) {
+                            connection.query(insertQuery, function (err, rows) {
+
+                                if(err)
+                                {
+                                    console.dir(err);
+                                    return done(null, false, req.flash('signupMessage', 'Database error'));
+                                }
+
+                                connection.release();
+
+                                fbUser.id = rows.insertId;
+
+                                User.setDefaultRating(fbUser.username, function (rating) {
+                                    return done(null, fbUser);
+                                });
+                            });
+                        });
+                    }
+                });
+            });
+
+        //return done(null, profile);
+        /*User.findOrCreate(..., function(err, user) {
+          if (err) { return done(err); }
+          done(null, user);
+        });*/
+      }
+    ));
 
     // =========================================================================
     // LOCAL SIGNUP ============================================================
@@ -109,6 +178,11 @@ module.exports = function(passport) {
 
                         ConnectionManager.pool.getConnection(function(err,connection) {
                             connection.query(insertQuery, function (err, rows) {
+                                if (err)
+                                {
+                                    console.dir(err);
+                                    return done(err);
+                                }
 
                                 connection.release();
 

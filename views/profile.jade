@@ -6,30 +6,23 @@ block content
 
   h1#profile-name !{name}
 
-  div.ct-chart
+  div#line-graph.ct-chart.unselectable
 
-
-
-
-  ul games summary
-    li won ?
-    li lost ?
-    li draw ?
-
-  ul games summary (white)
-    li won ?
-    li lost ?
-    li draw ?
-
-  ul games summary (black)
-    li won ?
-    li lost ?
-    li draw ?
+  div#left-chart.ct-chart.ct-donut-chart.unselectable
+    div.chart-bg.mix
+      div.chart-bg.mixWhite
+      span.which.g all
+  div#middle-chart.ct-chart.ct-donut-chart.unselectable
+    div.chart-bg.white
+      span.which.w white
+  div#right-chart.ct-chart.ct-donut-chart.unselectable
+    div.chart-bg.black
+      span.which.b black
   
 block scripts
   script.
     name = '#{name}'
   script(type='text/javascript', src='/javascripts/start.js')
   script(type='text/javascript', src='/javascripts/nickname.js')
-  script(type = 'text/javascript', src = '/bower_components/chartist/dist/chartist.js')
+  script(type='text/javascript', src='/bower_components/chartist/dist/chartist.js')
   script(type='text/javascript', src='/javascripts/charts.js')

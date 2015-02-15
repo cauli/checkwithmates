@@ -26,11 +26,20 @@ var options = {
         }
     },
     // Specify a fixed height for the chart as a string (i.e. '100px' or '50%')
-    height: '190px'
+    height: '195px'
 };
 
+var donutOptions = {
+  donut: true,
+  donutWidth: 19,
+  startAngle: 0,
+  total: 0,
+  showLabel: true,
+  height:'195px',
+  width: '195px'
+}
 
-new Chartist.Line('.ct-chart', {
+new Chartist.Line('#line-graph', {
     labels: ['0','0','0','0','0','0'],
     series: [
         {
@@ -49,9 +58,9 @@ $( document ).ready(function() {
         url: $URL + '/profile/'+name+'/rating',
         success: function(data) {
 
-            $('.ct-chart').empty();
+            $('#line-graph').empty();
 
-            new Chartist.Line('.ct-chart', {
+            new Chartist.Line('#line-graph', {
                 labels: data,
                 series: [
                     {
@@ -64,13 +73,67 @@ $( document ).ready(function() {
             prepareChart();
         }
     });
+
+
+    $.ajax({
+        type: 'GET',
+        contentType: 'application/json',
+        url: $URL + '/profile/'+name+'/results',
+        success: function(data) {
+
+            if(data.all.won == 0 && data.all.won == 0 && data.all.won == 0)
+            {
+                new Chartist.Pie('#left-chart.ct-chart', {
+                  labels: ['' + data.all.won, '' + data.all.lost, ''+data.all.drawn],
+                  series: [data.all.won+1,data.all.lost+1,data.all.drawn+1]
+                }, donutOptions);
+            }
+            else
+            {
+                new Chartist.Pie('#left-chart.ct-chart', {
+                  labels: ['' + data.all.won, '' + data.all.lost, ''+data.all.drawn],
+                  series: [data.all.won,data.all.lost,data.all.drawn]
+                }, donutOptions);
+            }
+      
+            if(data.white.won == 0 && data.white.won == 0 && data.white.won == 0)
+            {
+                new Chartist.Pie('#middle-chart.ct-chart', {
+                  labels: ['' + data.white.won, '' + data.white.lost, '' + data.white.drawn],
+                  series: [data.white.won+1,data.white.lost+1,data.white.drawn+1]
+                }, donutOptions);
+            }
+            else
+            {
+                new Chartist.Pie('#middle-chart.ct-chart', {
+                  labels: ['' + data.white.won, '' + data.white.lost, '' + data.white.drawn],
+                  series: [data.white.won,data.white.lost,data.white.drawn]
+                }, donutOptions);
+            }
+
+            if(data.black.won == 0 && data.black.won == 0 && data.black.won == 0)
+            {
+                new Chartist.Pie('#right-chart.ct-chart', {
+                  labels: ['' +data.black.won, '' +data.black.lost , '' + data.black.drawn],
+                  series: [data.black.won+1,data.black.lost+1,data.black.drawn+1]
+                }, donutOptions);
+            }
+            else
+            {
+                new Chartist.Pie('#right-chart.ct-chart', {
+                  labels: ['' +data.black.won, '' +data.black.lost , '' + data.black.drawn],
+                  series: [data.black.won,data.black.lost,data.black.drawn]
+                }, donutOptions);
+            }
+        }
+    });
 });
 
 var easeOutQuad = function (x, t, b, c, d) {
     return -c * (t /= d) * (t - 2) + b;
 };
 
-var $chart = $('.ct-chart');
+var $chart = $('#line-graph');
 
 var $toolTip = $chart
     .append('<div class="tooltip"></div>')

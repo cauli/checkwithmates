@@ -4,10 +4,11 @@ block content
   
   div#signup-box
     img(src="/images/logo_init.png")#logo_init(alt="Check with Mates")
-    - if(message && message.length > 0)
-      .button.fullwidth.warn=message
+    
     div#form
       form#signup_form(action='/signup', method='POST')
+        - if(message && message.length > 0)
+          .button.fullwidth.warn=message
         input.fullwidth.textinput#email(placeholder='email', type='email', maxlength='50', name='email')
         input.fullwidth.textinput#username(placeholder='username', maxlength='50', name='username')
         input.fullwidth.textinput#password(placeholder='password', type='password', maxlength='50', name='password')
@@ -18,5 +19,5 @@ block content
       a.faded(href='/forgot') forgot your password?
 
 block scripts
-  script(type='text/javascript', src='/javascripts/lodash.js')
+  script(type='text/javascript', src='/javascripts/vendor/lodash.js')
   script(type='text/javascript', src='/javascripts/signup.js')

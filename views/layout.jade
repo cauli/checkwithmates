@@ -26,13 +26,15 @@ html
     link(rel='stylesheet', href='/bower_components/chartist/dist/scss/chartist.css')
 
     script(type='text/javascript', src='/socket.io/socket.io.js')
-    script(type='text/javascript', src='/javascripts/lodash.min.js')
+    script(type='text/javascript', src='/javascripts/vendor/lodash.min.js')
     block head
 
     link(href='https://fonts.googleapis.com/css?family=Sorts+Mill+Goudy:400italic|Open+Sans:400,700,800', rel='stylesheet', type='text/css')
     //if IE
       script(src='http://html5shiv.googlecode.com/svn/trunk/html5.js')
   body(class=typeof token === "undefined" ? undefined : "ingame")
+    script(type='text/javascript', src='/javascripts/fb.js')
+      
     #modal-mask
       p
         strong Esc: 
@@ -85,17 +87,15 @@ html
         a#offer-accept.button(href='#') Accept
         a#offer-decline.button.button--red(href='#') Decline
     
-
     #container_wrapper.clearfix
       #container.clearfix
         block content
         
-        
     include footer.jade
 
-    script(type='text/javascript', src='/javascripts/jquery.js')
-    script(type='text/javascript', src='/javascripts/jquery.cookie.js')
-    script(type='text/javascript', src='/javascripts/jquery.stickyFooter.js')
-    script(type='text/javascript', src='/javascripts/chess.js')
+    script(type='text/javascript', src='/javascripts/vendor/jquery.js')
+    script(type='text/javascript', src='/javascripts/vendor/jquery.cookie.js')
+    script(type='text/javascript', src='/javascripts/vendor/jquery.stickyFooter.js')
+    script(type='text/javascript', src='/javascripts/vendor/chess.js')
     script(type='text/javascript', src='/javascripts/app.js')
     block scripts

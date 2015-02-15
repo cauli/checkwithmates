@@ -114,6 +114,12 @@ app.post('/login', passport.authenticate('local-login', {
   failureFlash : true // allow flash messages
 }));
 
+app.get('/auth/facebook', passport.authenticate('facebook'));
+
+app.get('/auth/facebook/callback', 
+  passport.authenticate('facebook', { successRedirect: '/',
+                                      failureRedirect: '/login' }));
+
 // =====================================
 // LOGOUT ==============================
 // =====================================
@@ -156,7 +162,16 @@ app.get('/profile/:name/rating', isLoggedIn, function(req, res) {
   });
 });
 
+app.get('/profile/:name/results', isLoggedIn, function(req, res) {
+  User.getGameResultsHistory(req.params.name, function (ratingHistory){
+    res.header('Content-type','application/json');
+    res.header('Charset','utf8');
+    res.send(JSON.stringify(ratingHistory));
+  });
+});
+
 app.get('/profile/:name', isLoggedIn, function(req, res) {
+  console.log("getting profile by name " +req.user.username)
   User.getRatingByUser(req.user.username, function (rating){
     res.render('profile', {
       'name': cleanInput(req.params.name),
@@ -165,10 +180,9 @@ app.get('/profile/:name', isLoggedIn, function(req, res) {
   });
 });
 
-function cleanInput(input)
-{
-  return input.replace(/(<([^>]+)>)/ig,"");
-}
+// =====================================
+// PLAY GAME ===========================
+// =====================================
 
 app.get('/play/:token/:time/:increment/:session', isLoggedIn, function(req, res) {
   User.getRatingByUser(req.user.username, function (rating){
@@ -182,6 +196,13 @@ app.get('/play/:token/:time/:increment/:session', isLoggedIn, function(req, res)
     });
   });
 });
+
+
+function cleanInput(input)
+{
+  return input.replace(/(<([^>]+)>)/ig,"");
+}
+
 
 function isLoggedIn(req, res, next) {
 
@@ -237,6 +258,24 @@ if (process.env.PORT) {
 }
 
 // User.setNewRating('cauli',2600,true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 io.sockets.on('connection', function (socket) {
   

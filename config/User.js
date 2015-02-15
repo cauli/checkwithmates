@@ -161,31 +161,82 @@ exports.setUserPlayed = function(username, info, callback) {
 exports.getGameResultsHistory = function(username, callback) {
     this.getId(username, function(id) {
         ConnectionManager.pool.getConnection(function(err,connection){
-            connection.query("select * from user_played where id = " + id + " ORDER BY timestamp ASC LIMIT 150",function(err, rows){
+            connection.query("select * from user_played where user_id = " + id + " LIMIT 2000",function(err, rows){
 
                 connection.release();
 
-                var history = [];
+                var allResultHistory   = {'won':0,'lost':0,'drawn':0};
+                var whiteResultHistory = {'won':0,'lost':0,'drawn':0};
+                var blackResultHistory = {'won':0,'lost':0,'drawn':0};
 
                 if (err)
                 {
-                    console.log("Unable to get rating history (getRatingHistory) for " + id + " error : " + err);
+                    console.log("Unable to get game results (getGameResultsHistory) for " + id + " error : " + err);
                     return false;
                 }
 
                 if (!rows.length) {
-                    console.log("Rating History for " + id + " not found");
-
+                    console.log("User has no game history : " + id + "");
+                    // return({'error':'User has not played any games!'});
                 }
                 else
                 {
                     for(var i=0; i<rows.length; i++)
                     {
-                        history.push(rows[i].rating.toString());
+                        if(rows[i].PLAYER_RESULT == 1)
+                        {
+                            allResultHistory.won += 1;
+
+                            if(rows[i].COLOR == 'white')
+                            {
+                                whiteResultHistory.won += 1;
+                            }
+                            else
+                            {
+                                blackResultHistory.won += 1;
+                            }
+                        }
+                        else if(rows[i].PLAYER_RESULT == 0)
+                        {
+                            allResultHistory.drawn += 1;
+
+                            if(rows[i].COLOR == 'white')
+                            {
+                                whiteResultHistory.drawn += 1;
+                            }
+                            else
+                            {
+                                blackResultHistory.drawn += 1;
+                            }
+                        }
+                        else if(rows[i].PLAYER_RESULT == -1)
+                        {
+                            allResultHistory.lost += 1;
+
+                            if(rows[i].COLOR == 'white')
+                            {
+                                whiteResultHistory.lost += 1;
+                            }
+                            else
+                            {
+                                blackResultHistory.lost += 1;
+                            }
+                        }
+                        else
+                        {
+                            console.log("error getting row for results");
+                            console.log(rows[i]);
+                        }
                     }
                 }
 
-                return callback(history);
+                var response = {
+                    'all' : allResultHistory,
+                    'white' : whiteResultHistory,
+                    'black':  blackResultHistory
+                }
+
+                return callback(response);
             });
         });
     });

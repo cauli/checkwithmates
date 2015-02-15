@@ -1,3 +1,78 @@
+div.chart-bg {
+  width: 158px;
+  height: 158px;
+  border-radius: 79px;
+  position: absolute;
+  z-index: -1;
+  margin: 0 auto;
+  margin-top: 17px;
+  margin-left: 85px; }
+
+.ct-chart-pie {
+  margin-left: 70px;
+  overflow: visible; }
+
+div.mix {
+  background-color: #282828;
+  overflow: hidden; }
+
+div.mixWhite {
+  margin-top: -3px;
+  margin-left: -50px;
+  background-color: #FBF8FB;
+  -webkit-animation: slide 5s ease-in-out infinite;
+  -moz-animation: slide 5s ease-in-out infinite;
+  animation: slide 5s ease-in-out infinite; }
+
+@-webkit-keyframes slide {
+  from {
+    transform: translateX(-100%); }
+
+  to {
+    transform: translateX(130%); } }
+
+div.white {
+  background-color: #282828; }
+
+div.black {
+  background-color: #FBF8FB; }
+
+span.which {
+  font-family: 'Sorts Mill Goudy', serif;
+  font-size: 2em !important;
+  font-style: italic;
+  top: 0;
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 75px;
+  pointer-events: none; }
+
+span.g {
+  margin-top: -18px;
+  color: #80838c; }
+
+span.w {
+  margin-top: -18px;
+  color: #FBF8FB; }
+
+span.b {
+  margin-top: -18px;
+  color: #282828; }
+
+.ct-donut-chart {
+  float: left;
+  position: relative;
+  display: inline-block;
+  z-index: 3;
+  width: 33.33333%; }
+
+.ct-donut-chart .ct-label {
+  font-family: 'Helvetica', Helvetica, Arial, sans-serif;
+  color: white !important;
+  fill: white !important;
+  font-size: 1rem !important; }
+
 .circle {
   transition: .25s;
   width: 100%;
@@ -6,8 +81,8 @@
   position: relative;
   left: 50%;
   top: 50%;
-  margin-left: -50.0%;
-  margin-top: -50.0%;
+  margin-left: -50%;
+  margin-top: -50%;
   opacity: 0.5;
   transform: scale(1); }
 
@@ -46,8 +121,7 @@ html {
   color: #fefefe;
   text-shadow: none; }
 
-.clearfix:before,
-.clearfix:after {
+.clearfix:before, .clearfix:after {
   content: " ";
   display: table; }
 
@@ -256,7 +330,7 @@ label.main {
 .warn {
   transition: 2s;
   opacity: 0.5;
-  background-color: #CC6582 !important;
+  background-color: #BA6060 !important;
   font-size: 0.9em !important;
   color: white;
   margin-bottom: 30px !important;
@@ -270,7 +344,7 @@ label.main {
   background-color: #dad7d2; }
 
 #create-account {
-  margin-top: 45px; }
+  margin-top: 15px; }
 
 #create_form {
   position: relative;
@@ -333,8 +407,8 @@ label.main {
   position: relative;
   left: 50%;
   margin-left: -61px;
-  margin-top: 46px;
-  margin-bottom: 50px; }
+  margin-top: 16px;
+  margin-bottom: 30px; }
 
 #logo_login {
   position: absolute;
@@ -405,7 +479,7 @@ h1 {
 h1.knight {
   height: 122px;
   width: 122px;
-  background: url("../images/knight.png") no-repeat;
+  background: url('../images/knight.png') no-repeat;
   margin: 2em auto 0.5em auto; }
 
 h2 {
@@ -771,25 +845,35 @@ span#game-type {
 @keyframes invalid {
   0% {
     margin-left: 8px; }
+
   10% {
     margin-left: -8px; }
+
   30% {
     margin-left: 8px; }
+
   60% {
     margin-left: -8px; }
+
   100% {
     margin-left: 0px; } }
-@-webkit-keyframes invalid /* Safari and Chrome */ {
+
+@-webkit-keyframes invalid {
   0% {
     margin-left: 8px; }
+
   10% {
     margin-left: -8px; }
+
   30% {
     margin-left: 8px; }
+
   60% {
     margin-left: -8px; }
+
   100% {
     margin-left: 0px; } }
+
 input, button {
   font-family: 'Open Sans'; }
 
@@ -850,7 +934,6 @@ h5 {
   display: block; }
 
 .inverted {
-  /* Rectangle 19: */
   background: rgba(100, 204, 161, 0.1) !important;
   border: 1px solid #65CCA1 !important;
   border-radius: 3px !important;
@@ -859,6 +942,18 @@ h5 {
 .inverted:hover {
   background: #67D0B5 !important;
   border: 1px solid #65CCA1 !important;
+  border-radius: 3px !important;
+  color: white !important; }
+
+.facebook {
+  background: rgba(70, 98, 158, 0.2) !important;
+  border: 1px solid #4275E3;
+  border-radius: 3px;
+  color: #4275E3 !important; }
+
+.facebook:hover {
+  background: #46629E !important;
+  border: 1px solid #46629E !important;
   border-radius: 3px !important;
   color: white !important; }
 
@@ -1090,7 +1185,8 @@ ul#chat {
   color: #444; }
 
 #turnTime {
-  text-indent: 15px; }
+  text-indent: 15px;
+  width: 100px; }
 
 /* Captured pieces */
 #captured-pieces {
@@ -1200,8 +1296,7 @@ div#moves {
         cursor: pointer;
         position: absolute; }
 
-.chess_board tr:nth-child(odd) td:nth-child(even),
-.chess_board tr:nth-child(even) td:nth-child(odd) {
+.chess_board tr:nth-child(odd) td:nth-child(even), .chess_board tr:nth-child(even) td:nth-child(odd) {
   background: #dad7d2; }
 
 span.feedback {
@@ -1217,10 +1312,10 @@ span.feedback {
   font-weight: bold; }
 
 span.whitefeedback {
-  background: url("../images/whiteking.png") 0% 50% no-repeat; }
+  background: url('../images/whiteking.png') 0% 50% no-repeat; }
 
 span.blackfeedback {
-  background: url("../images/blackking.png") 0% 50% no-repeat; }
+  background: url('../images/blackking.png') 0% 50% no-repeat; }
 
 span.promotion {
   line-height: 28px;
@@ -1242,45 +1337,43 @@ span.promotion {
   overflow: hidden; }
 
 #login-box, #signup-box, #forgot-box {
-  width: 238px;
+  width: 260px;
   margin: 10% auto; }
 
 /* Media queries */
 @media only screen and (min-width: 760px) and (max-width: 900px) {
   header, #board_moves_wrapper {
     max-width: 760px; }
-
   #sounds_label {
     max-width: 530px; }
-
   #container_wrapper {
     max-width: 900px;
     padding: 1em 10px; }
-
   table#moves {
     margin-left: 0;
     float: right;
     height: 516px; }
-
   table#moves, #moves thead, #moves tbody tr {
     width: 200px; }
-
   #moves tbody tr td {
     width: 90px;
     margin: 0 5px; } }
+
 @media only screen and (min-width: 1400px) {
   .chat-wrapper {
     display: block; } }
+
 @media only screen and (max-width: 999px) {
   #captured-pieces {
     display: none; } }
+
 @media only screen and (min-width: 530px) and (max-width: 759px) {
   header, #board_moves_wrapper, #sounds_label {
     max-width: 530px; } }
+
 @media only screen and (max-width: 759px) {
   html {
     font-size: 14px; }
-
   #form fieldset {
     width: 100%;
     text-align: center; }
@@ -1292,38 +1385,47 @@ span.promotion {
         margin-left: -7em;
         margin-top: 0;
         right: auto; }
-
   span#game-type {
     display: none; }
-
   #container_wrapper {
     max-width: 759px;
     padding: 1em 5px; }
-
   span.feedback {
     float: right;
     clear: none; }
-
   table#moves {
     margin-left: 0;
     margin-top: 0.5em;
     height: 258px; } }
+
 @media only screen and (max-width: 529px) {
+  #forgot-message {
+    margin-top: 10px;
+    margin-bottom: 6px;
+    display: block;
+    margin-left: 10px; }
+  #forgot-box {
+    width: 90%;
+    margin: 0 auto;
+    padding: 0; }
+  #login-box {
+    width: 90%;
+    margin: 0 auto;
+    padding: 0; }
+  #logo_init {
+    margin-top: 20px;
+    margin-bottom: 20px; }
   header, #board_moves_wrapper, #sounds_label {
     max-width: 470px; }
-
   input.game_link {
     font-size: 1rem; }
-
   ul.clock {
     width: 118px; }
     ul.clock li {
       width: 55px; }
-
   #container_wrapper {
     max-width: 529px;
     padding: 1em 5px; }
-
   .chess_board {
     border: 4px solid #38383a;
     width: 456px;
@@ -1339,5 +1441,3 @@ span.promotion {
           width: 57px;
           height: 57px;
           font-size: 3.5rem; } }
-
-/*# sourceMappingURL=style.css.map */
