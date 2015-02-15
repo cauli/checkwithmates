@@ -108,11 +108,13 @@ app.get('/login', function(req, res) {
   res.render('login', { message: "" +info + "" });
 });
 
+/*
 app.get('/error', function(req, res){
   var info = req.flash('loginMessage');
   console.log(info)
   res.render('login', { message: "" +info + "" });
 });
+*/
 
 app.post('/login', passport.authenticate('local-login', {
   successRedirect : '/', // redirect to the secure profile section
@@ -224,7 +226,7 @@ function isLoggedIn(req, res, next) {
   }
 
   // if they aren't redirect them to the home page
-  res.redirect('/error');
+  res.redirect('/');
 }
 
 app.get('/logs', function(req, res) {
