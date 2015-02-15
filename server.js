@@ -109,8 +109,9 @@ app.get('/login', function(req, res) {
 });
 
 app.get('/error', function(req, res){
-  console.log("Authentication error");
-  res.render('login', { message: "Authentication error" });
+  var info = req.flash('loginMessage');
+  console.log(info)
+  res.render('login', { message: "" +info + "" });
 });
 
 app.post('/login', passport.authenticate('local-login', {
