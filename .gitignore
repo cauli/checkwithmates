@@ -1,3 +1,5 @@
 /node_modules
 /logs
 .idea
+/config/database.js
+/config/email.js
