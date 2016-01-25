@@ -10,6 +10,6 @@ module.exports = {
     },
 	auth: {
 	user: "checkwithmates@cauli.kinghost.net",
-	pass: "LULLABY666"
+	pass: "nottherealpassword"
 	}
 };

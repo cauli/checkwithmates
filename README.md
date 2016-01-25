@@ -5,3 +5,6 @@ Real-time online team chess variant / experiment where players of each team make
 
 Based on the open source projects Reti Chess, chess.js & Node.js.
 
+Currently hosted on a free Heroku dyno:
+
+http://checkwithmates.com

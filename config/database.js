@@ -4,7 +4,7 @@ module.exports = {
         'connectionLimit': 100,
         'host': 'mysql.cauli.kinghost.net',
         'user': 'cauli02',
-        'password': 'pfft6vol'
+        'password': 'addyourpaddwordhere' // NOT THE REAL PASSWORD
     },
 	'database': 'cauli02',
     'users_table': 'users'

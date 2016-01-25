@@ -214,9 +214,6 @@ module.exports = function(passport) {
             passReqToCallback : true // allows us to pass back the entire request to the callback
         },
         function(req, username, password, done) { // callback with email and password from our form
-            console.log("passport logging in");
-
-            console.log("trying to login " + username + ' password !' + password+ '!');
             ConnectionManager.pool.getConnection(function(err,connection) {
                 connection.query("select * from users where username = '" + username + "' OR email = '" + username +"'",function(err, rows){
 
@@ -225,13 +222,8 @@ module.exports = function(passport) {
                     if (err)
                         return done(err);
                     if (!rows.length) {
-                        console.log("Login Message: No user found.");
                         return done(null, false, req.flash('loginMessage', 'User was not found!')); // req.flash is the way to set flashdata using connect-flash
                     }
-
-                    console.log(bcrypt.compareSync(password, rows[0].password));
-                    console.log( '!' + rows[0].password +  '! there password hashed ');
-
 
                     // if the user is found but the password is wrong
                     if (!bcrypt.compareSync(password, rows[0].password))
